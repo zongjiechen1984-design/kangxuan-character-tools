@@ -599,6 +599,7 @@
               <option value="all">全部</option>
               <option value="一下">一下</option>
               <option value="二上">二上</option>
+              <option value="confusion">混淆字專練</option>
               <option value="wrong">只練錯題</option>
             </select>
           </label>
@@ -709,6 +710,13 @@
       "生日", "升旗", "珍珠", "水珠", "水滴", "雨滴", "青草", "草地",
       "看書", "看見", "看到", "聽見", "寫字", "認字", "打掃", "加油"
     ]);
+    const confusionHints = {
+      生:["升"], 升:["生"], 珍:["珠"], 珠:["珍"], 游:["遊"], 遊:["游"],
+      清:["情"], 情:["清"], 日:["目"], 己:["已","巳"], 自:["白","目"],
+      低:["底"], 作:["做"], 坐:["座"], 園:["圓"], 圓:["園"],
+      馬:["媽","嗎"], 嗎:["媽","馬"], 休:["体"], 後:["候"], 只:["隻"],
+      他:["她"], 它:["他"], 的:["地","得"], 亮:["高"], 早:["草"]
+    };
     const allItems = lessons.flatMap(lesson => lesson.words.map((word, index) => ({
       key: `${lesson.book}-${lesson.lesson}-${word[0]}`,
       book: lesson.book,
@@ -844,11 +852,28 @@
       return Boolean(trialTerm && trialTerm !== item.term && commonTerms.has(trialTerm));
     }
 
+    function learnedItemForChar(char) {
+      return allItems.find(item => item.char === char);
+    }
+
+    function hasConfusionPractice(item) {
+      const pairChars = confusionHints[item.char] || [];
+      return pairChars.some(char => learnedItemForChar(char));
+    }
+
+    function confusionItems() {
+      return allItems.filter(hasConfusionPractice);
+    }
+
     function pool() {
       const filter = el("bookFilter").value;
       if (filter === "wrong") {
         const wrong = allItems.filter(item => (state.records[item.key]?.wrong || 0) > 0);
         return wrong.length ? wrong : allItems;
+      }
+      if (filter === "confusion") {
+        const items = confusionItems();
+        return items.length ? items : allItems;
       }
       if (filter === "all") return allItems;
       return allItems.filter(item => item.book === filter);
@@ -926,12 +951,20 @@
 
     function choicesFor(item, mode) {
       const field = mode === "zhuyin" ? "zhuyin" : "char";
+      const priority = mode === "char"
+        ? (confusionHints[item.char] || []).map(learnedItemForChar).filter(Boolean)
+        : [];
       const samePool = shuffle(allItems.filter(candidate => {
         if (candidate[field] === item[field]) return false;
+        if (priority.some(priorityItem => priorityItem[field] === candidate[field])) return false;
         if (mode === "char" && createsAnotherCommonTerm(item, candidate)) return false;
         return true;
       }));
       const values = [item];
+      for (const candidate of priority) {
+        if (!values.some(value => value[field] === candidate[field])) values.push(candidate);
+        if (values.length === 4) break;
+      }
       for (const candidate of samePool) {
         if (!values.some(value => value[field] === candidate[field])) values.push(candidate);
         if (values.length === 4) break;
@@ -974,6 +1007,7 @@
       el("displayChar").textContent = mode === "zhuyin" ? item.char : "？";
       setZhuyin(el("displayZhuyin"), item.zhuyin, mode === "zhuyin");
       el("promptTitle").textContent =
+        el("bookFilter").value === "confusion" && mode === "char" ? "混淆字專練：看清楚語詞，選出正確國字" :
         mode === "char" ? "看注音和米字格語詞，選出正確國字" :
         mode === "zhuyin" ? "看國字，選出正確注音" :
         "看注音和米字格語詞，在格子裡寫出國字";
@@ -1056,7 +1090,7 @@
       const wrongCount = dailyItems().filter(item => (state.records[item.key]?.wrong || 0) > 0).length;
       el("dailyProgress").textContent = `${done}/${total}`;
       el("dailyNote").textContent = isDailyMode()
-        ? `今日 10 題：錯題優先 ${wrongCount} 題，已完成 ${done} 題。`
+        ? `今日 10 題：錯題優先 ${wrongCount} 題，已完成 ${done} 題。${scopeKey() === "confusion" ? "目前範圍是混淆字專練。" : ""}`
         : `目前是一般練習；切回「每日 10 題」會先排錯題，再補其他生字。`;
     }
 
