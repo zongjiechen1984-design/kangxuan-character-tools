@@ -64,7 +64,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(4, minmax(88px, 1fr));
+      grid-template-columns: repeat(5, minmax(88px, 1fr));
       gap: 10px;
       margin: 18px 0;
     }
@@ -400,6 +400,18 @@
       line-height: 1.6;
     }
 
+    .daily-note {
+      margin-top: 12px;
+      border: 1px solid #b8d3ca;
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: var(--soft);
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.5;
+    }
+
     .actions {
       display: flex;
       flex-wrap: wrap;
@@ -574,6 +586,7 @@
     <section class="stats" aria-label="答題統計">
       <div class="stat"><b id="sessionTotal">0</b><span>本次作答</span></div>
       <div class="stat"><b id="sessionCorrect">0</b><span>本次答對</span></div>
+      <div class="stat"><b id="dailyProgress">0/10</b><span>今日進度</span></div>
       <div class="stat"><b id="accuracy">0%</b><span>累積正確率</span></div>
       <div class="stat"><b id="wrongCount">0</b><span>需複習生字</span></div>
     </section>
@@ -598,7 +611,8 @@
           </label>
           <label>題數
             <select id="roundSize">
-              <option value="10">10 題</option>
+              <option value="daily10">每日 10 題</option>
+              <option value="10">一般 10 題</option>
               <option value="20">20 題</option>
               <option value="999">不限題數</option>
             </select>
@@ -634,6 +648,7 @@
         </div>
 
         <div id="answer" class="answer"></div>
+        <div id="dailyNote" class="daily-note"></div>
         <div class="actions">
           <button id="againWrong" type="button">再練錯題</button>
           <button id="shuffleBtn" type="button">換一題</button>
@@ -668,6 +683,8 @@
     ];
 
     const STORAGE_KEY = "kangxuan-character-game-v1";
+    const DAILY_KEY = "kangxuan-character-game-daily-v1";
+    const DAILY_LIMIT = 10;
     const termHints = {
       先:"先看", 看:"看見", 空:"天空", 雲:"白雲", 鳥:"小鳥", 草:"青草", 蟲:"小蟲", 水:"喝水", 再:"再見", 玩:"玩水",
       園:"花園", 聞:"聞香", 香:"花香", 正:"正在", 唱:"唱歌", 聽:"聽見", 沒:"沒有", 找:"找到", 芽:"小芽", 身:"身上",
@@ -709,6 +726,7 @@
       sessionTotal: 0,
       sessionCorrect: 0,
       roundAnswered: 0,
+      daily: loadDailyState(),
       records: loadRecords()
     };
 
@@ -725,8 +743,20 @@
       }
     }
 
+    function loadDailyState() {
+      try {
+        return JSON.parse(localStorage.getItem(DAILY_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
     function saveRecords() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+    }
+
+    function saveDailyState() {
+      localStorage.setItem(DAILY_KEY, JSON.stringify(state.daily));
     }
 
     function recordFor(item) {
@@ -738,6 +768,22 @@
 
     function shuffle(list) {
       return [...list].sort(() => Math.random() - 0.5);
+    }
+
+    function todayKey() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const date = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${date}`;
+    }
+
+    function itemByKey(key) {
+      return allItems.find(item => item.key === key);
+    }
+
+    function scopeKey() {
+      return el("bookFilter").value;
     }
 
     function escapeHtml(value) {
@@ -808,7 +854,72 @@
       return allItems.filter(item => item.book === filter);
     }
 
+    function isDailyMode() {
+      return el("roundSize").value === "daily10";
+    }
+
+    function wrongPriorityItems(items) {
+      return [...items]
+        .filter(item => (state.records[item.key]?.wrong || 0) > 0)
+        .sort((a, b) => {
+          const aRecord = state.records[a.key] || {};
+          const bRecord = state.records[b.key] || {};
+          const aNeed = (aRecord.wrong || 0) - (aRecord.correct || 0);
+          const bNeed = (bRecord.wrong || 0) - (bRecord.correct || 0);
+          return (bNeed - aNeed) || ((bRecord.wrong || 0) - (aRecord.wrong || 0));
+        });
+    }
+
+    function dailyPlanKey() {
+      return `${todayKey()}|${scopeKey()}`;
+    }
+
+    function dailyPlan() {
+      const key = dailyPlanKey();
+      if (!state.daily[key]) {
+        const items = pool();
+        const wrongItems = wrongPriorityItems(items);
+        const wrongKeys = new Set(wrongItems.map(item => item.key));
+        const reviewItems = [
+          ...wrongItems,
+          ...shuffle(items.filter(item => !wrongKeys.has(item.key)))
+        ].slice(0, DAILY_LIMIT);
+
+        state.daily[key] = {
+          date: todayKey(),
+          scope: scopeKey(),
+          keys: reviewItems.map(item => item.key),
+          answered: []
+        };
+        saveDailyState();
+      }
+      return state.daily[key];
+    }
+
+    function dailyItems() {
+      return dailyPlan().keys.map(itemByKey).filter(Boolean);
+    }
+
+    function dailyRemainingItems() {
+      const plan = dailyPlan();
+      const answered = new Set(plan.answered || []);
+      return dailyItems().filter(item => !answered.has(item.key));
+    }
+
+    function markDailyAnswered(item) {
+      if (!isDailyMode() || !item) return;
+      const plan = dailyPlan();
+      if (!plan.answered.includes(item.key)) {
+        plan.answered.push(item.key);
+        saveDailyState();
+      }
+    }
+
     function pickQuestion() {
+      if (isDailyMode()) {
+        const remaining = dailyRemainingItems();
+        return remaining.length ? remaining[0] : null;
+      }
       const items = pool();
       return items[Math.floor(Math.random() * items.length)];
     }
@@ -840,6 +951,21 @@
     function renderQuestion() {
       const mode = el("mode").value;
       const item = pickQuestion();
+      if (!item) {
+        state.current = null;
+        state.answered = false;
+        setFeedbackMark(null);
+        el("displayChar").textContent = "完";
+        setZhuyin(el("displayZhuyin"), "", true);
+        el("promptTitle").textContent = "今天 10 題完成了";
+        el("termGrid").innerHTML = "";
+        el("promptMeta").textContent = "可以明天再練，或切換成一般 10 題繼續練。";
+        el("choices").innerHTML = "";
+        el("writingArea").style.display = "none";
+        el("answer").style.display = "none";
+        updateStats();
+        return;
+      }
       state.current = item;
       state.answered = false;
       el("answer").style.display = "none";
@@ -894,6 +1020,7 @@
       else record.wrong += 1;
       record.last = new Date().toISOString();
       saveRecords();
+      markDailyAnswered(state.current);
       setFeedbackMark(isCorrect ? "correct" : "wrong");
       showAnswer();
       updateStats();
@@ -918,7 +1045,19 @@
       el("sessionCorrect").textContent = state.sessionCorrect;
       el("accuracy").textContent = totals.attempts ? `${Math.round(totals.correct / totals.attempts * 100)}%` : "0%";
       el("wrongCount").textContent = totals.wrongItems;
+      updateDailyStatus();
       renderWrongList();
+    }
+
+    function updateDailyStatus() {
+      const plan = dailyPlan();
+      const total = plan.keys.length || DAILY_LIMIT;
+      const done = new Set(plan.answered || []).size;
+      const wrongCount = dailyItems().filter(item => (state.records[item.key]?.wrong || 0) > 0).length;
+      el("dailyProgress").textContent = `${done}/${total}`;
+      el("dailyNote").textContent = isDailyMode()
+        ? `今日 10 題：錯題優先 ${wrongCount} 題，已完成 ${done} 題。`
+        : `目前是一般練習；切回「每日 10 題」會先排錯題，再補其他生字。`;
     }
 
     function renderWrongList() {
@@ -998,7 +1137,7 @@
 
     el("nextBtn").addEventListener("click", () => {
       const limit = Number(el("roundSize").value);
-      if (limit !== 999 && state.roundAnswered >= limit) {
+      if (!isDailyMode() && limit !== 999 && state.roundAnswered >= limit) {
         state.roundAnswered = 0;
       }
       renderQuestion();
@@ -1014,14 +1153,17 @@
     });
     el("resetStats").addEventListener("click", () => {
       state.records = {};
+      state.daily = {};
       state.sessionTotal = 0;
       state.sessionCorrect = 0;
       state.roundAnswered = 0;
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(DAILY_KEY);
       updateStats();
     });
     el("mode").addEventListener("change", renderQuestion);
     el("bookFilter").addEventListener("change", renderQuestion);
+    el("roundSize").addEventListener("change", renderQuestion);
     canvas.addEventListener("pointerdown", startDraw);
     canvas.addEventListener("pointermove", moveDraw);
     canvas.addEventListener("pointerup", endDraw);
