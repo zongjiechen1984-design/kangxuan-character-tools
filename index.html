@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>康軒國語生字工具</title>
+  <style>
+    :root {
+      --ink: #172024;
+      --muted: #5d6a70;
+      --paper: #f8faf7;
+      --panel: #ffffff;
+      --accent: #2f675f;
+      --accent-2: #d97b40;
+      --line: #cfd8dc;
+      --shadow: 0 18px 45px rgba(31, 47, 55, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(47, 103, 95, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(47, 103, 95, 0.05) 1px, transparent 1px),
+        var(--paper);
+      background-size: 34px 34px;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    main {
+      width: min(760px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: max(30px, env(safe-area-inset-top)) 0 max(36px, env(safe-area-inset-bottom));
+      min-height: 100vh;
+      display: grid;
+      align-content: center;
+      gap: 18px;
+    }
+
+    header {
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 9vw, 58px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.6;
+      font-weight: 700;
+    }
+
+    .tools {
+      display: grid;
+      gap: 14px;
+    }
+
+    a {
+      display: grid;
+      gap: 8px;
+      min-height: 132px;
+      padding: 22px;
+      color: var(--ink);
+      text-decoration: none;
+      background: var(--panel);
+      border: 2px solid #203236;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    a:active {
+      transform: translateY(1px);
+      border-color: var(--accent-2);
+    }
+
+    strong {
+      font-size: clamp(28px, 7vw, 42px);
+      line-height: 1.1;
+      font-weight: 1000;
+    }
+
+    span {
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>康軒國語生字工具</h1>
+      <p>給 iPad、iPhone 直接開啟使用。</p>
+    </header>
+
+    <section class="tools" aria-label="工具列表">
+      <a href="生字查詢.html">
+        <strong>生字查詢</strong>
+        <span>查這個字有沒有學過，並查看課次、注音、部首與筆畫。</span>
+      </a>
+      <a href="生字小遊戲.html">
+        <strong>生字小遊戲</strong>
+        <span>用選字、選注音、手寫練習複習生字，並記錄答對答錯。</span>
+      </a>
+    </section>
+  </main>
+</body>
+</html>
