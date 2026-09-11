@@ -162,7 +162,7 @@
 
     .question {
       display: grid;
-      grid-template-columns: 170px minmax(0, 1fr);
+      grid-template-columns: 170px minmax(0, 1fr) 112px;
       gap: 18px;
       align-items: center;
       border: 2px solid #203236;
@@ -259,6 +259,47 @@
       color: var(--muted);
       font-weight: 800;
       line-height: 1.6;
+    }
+
+    .feedback-mark {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      justify-self: center;
+      font-size: 0;
+      font-weight: 1000;
+      line-height: 1;
+      opacity: 0;
+      transform: scale(0.82);
+      transition: opacity 160ms ease, transform 160ms ease;
+      pointer-events: none;
+    }
+
+    .feedback-mark.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .feedback-mark.correct {
+      border: 9px solid var(--good);
+      background: #e9f6ef;
+      box-shadow: 0 10px 24px rgba(40, 125, 85, 0.18);
+    }
+
+    .feedback-mark.wrong {
+      border-radius: 16px;
+      color: var(--bad);
+      background: #fff1ee;
+      box-shadow: 0 10px 24px rgba(177, 69, 53, 0.16);
+    }
+
+    .feedback-mark.wrong::before {
+      content: "X";
+      font-size: 92px;
+      line-height: 0.8;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     .choices {
@@ -482,6 +523,23 @@
         grid-template-columns: 1fr;
       }
 
+      .question {
+        grid-template-columns: minmax(0, 1fr) 96px;
+      }
+
+      .char-wrap {
+        grid-column: 1 / -1;
+      }
+
+      .feedback-mark {
+        width: 82px;
+        height: 82px;
+      }
+
+      .feedback-mark.wrong::before {
+        font-size: 78px;
+      }
+
       .controls {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -560,6 +618,7 @@
             <div id="termGrid" class="term-grid" aria-label="語詞題目"></div>
             <div id="promptMeta" class="prompt-meta">可以在 iPad 上用手指或觸控筆寫字。</div>
           </div>
+          <div id="feedbackMark" class="feedback-mark" aria-live="polite" aria-label=""></div>
         </div>
 
         <div id="choices" class="choices"></div>
@@ -769,6 +828,15 @@
       return shuffle(values);
     }
 
+    function setFeedbackMark(result) {
+      const mark = el("feedbackMark");
+      mark.className = "feedback-mark";
+      mark.removeAttribute("aria-label");
+      if (!result) return;
+      mark.classList.add("show", result);
+      mark.setAttribute("aria-label", result === "correct" ? "答對" : "答錯");
+    }
+
     function renderQuestion() {
       const mode = el("mode").value;
       const item = pickQuestion();
@@ -776,6 +844,7 @@
       state.answered = false;
       el("answer").style.display = "none";
       el("answer").textContent = "";
+      setFeedbackMark(null);
       el("displayChar").textContent = mode === "zhuyin" ? item.char : "？";
       setZhuyin(el("displayZhuyin"), item.zhuyin, mode === "zhuyin");
       el("promptTitle").textContent =
@@ -825,6 +894,7 @@
       else record.wrong += 1;
       record.last = new Date().toISOString();
       saveRecords();
+      setFeedbackMark(isCorrect ? "correct" : "wrong");
       showAnswer();
       updateStats();
     }
