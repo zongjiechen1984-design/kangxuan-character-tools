@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>生字小遊戲</title>
+  <style>
+    :root {
+      --ink: #1c2529;
+      --muted: #65727a;
+      --line: #cfd8dc;
+      --paper: #f8faf7;
+      --panel: #ffffff;
+      --accent: #2f675f;
+      --accent-2: #d97b40;
+      --good: #287d55;
+      --bad: #b14535;
+      --soft: #e8f2ef;
+      --shadow: 0 16px 40px rgba(31, 47, 55, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(47, 103, 95, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(47, 103, 95, 0.05) 1px, transparent 1px),
+        var(--paper);
+      background-size: 34px 34px;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 24px 0 42px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      padding-bottom: 16px;
+      border-bottom: 3px solid var(--accent);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 52px);
+      letter-spacing: 0;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(88px, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 8px 20px rgba(31, 47, 55, 0.06);
+    }
+
+    .stat b {
+      display: block;
+      font-size: 26px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    select, button {
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      min-height: 48px;
+      padding: 0 12px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 900;
+      font-family: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.warn {
+      border-color: #f0c8bf;
+      color: var(--bad);
+      background: #fff8f6;
+    }
+
+    button.good {
+      border-color: var(--good);
+      color: #fff;
+      background: var(--good);
+    }
+
+    button.bad {
+      border-color: var(--bad);
+      color: #fff;
+      background: var(--bad);
+    }
+
+    .question {
+      display: grid;
+      grid-template-columns: 170px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+      border: 2px solid #203236;
+      border-radius: 10px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .char-wrap {
+      display: grid;
+      grid-template-columns: 118px 44px;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tianzi {
+      width: 118px;
+      height: 118px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      border: 3px solid #111;
+      font-family: "DFKai-SB", "KaiTi", serif;
+      font-size: 74px;
+      background: #fff;
+      line-height: 1;
+    }
+
+    .tianzi::before, .tianzi::after {
+      content: "";
+      position: absolute;
+      background: #ccd3d6;
+    }
+
+    .tianzi::before {
+      width: 1px;
+      height: 100%;
+      left: 50%;
+      top: 0;
+    }
+
+    .tianzi::after {
+      height: 1px;
+      width: 100%;
+      left: 0;
+      top: 50%;
+    }
+
+    .bpmf {
+      min-height: 118px;
+      display: grid;
+      grid-template-columns: 26px 16px;
+      justify-content: center;
+      align-items: center;
+      column-gap: 1px;
+      color: #111;
+      font-weight: 1000;
+    }
+
+    .bpmf-main {
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 1000;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .bpmf-tone {
+      font-size: 24px;
+      font-weight: 1000;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 92px;
+    }
+
+    .bpmf.blank {
+      grid-template-columns: 1fr;
+      font-size: 42px;
+    }
+
+    .prompt h2 {
+      margin: 0 0 10px;
+      font-size: clamp(24px, 4vw, 38px);
+      line-height: 1.18;
+    }
+
+    .prompt-meta {
+      color: var(--muted);
+      font-weight: 800;
+      line-height: 1.6;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .choice {
+      min-height: 72px;
+      border-color: #243236;
+      background: #fff;
+      text-align: center;
+      display: grid;
+      place-items: center;
+      line-height: 1.25;
+    }
+
+    .choice-char {
+      font-family: "DFKai-SB", "KaiTi", serif;
+      font-size: 46px;
+      font-weight: 900;
+      text-align: center;
+      min-width: 42px;
+    }
+
+    .choice-term {
+      font-size: 21px;
+      font-weight: 900;
+    }
+
+    .choice-small {
+      display: block;
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .choice .bpmf {
+      display: inline-grid;
+      min-height: 54px;
+      vertical-align: middle;
+    }
+
+    .choice .bpmf-main {
+      font-size: 25px;
+    }
+
+    .choice .bpmf-tone {
+      font-size: 20px;
+      min-height: 42px;
+    }
+
+    .choice.correct {
+      border-color: var(--good);
+      background: #e9f6ef;
+      color: var(--good);
+    }
+
+    .choice.wrong {
+      border-color: var(--bad);
+      background: #fff1ee;
+      color: var(--bad);
+    }
+
+    .writing-area {
+      display: none;
+      margin-top: 16px;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    canvas {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-height: 520px;
+      border: 3px solid #111;
+      border-radius: 10px;
+      background: #fff;
+      touch-action: none;
+    }
+
+    .write-actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .answer {
+      display: none;
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--soft);
+      font-weight: 900;
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .side h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .wrong-list {
+      display: grid;
+      gap: 8px;
+      max-height: 420px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .wrong-item {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .mini-char {
+      font-family: "DFKai-SB", "KaiTi", serif;
+      font-size: 32px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .term-grid {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      margin: 12px 0;
+      width: max-content;
+    }
+
+    .mi-cell {
+      width: 76px;
+      height: 76px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      border: 2px solid #111;
+      margin-top: -2px;
+      background: #fff;
+      font-family: "DFKai-SB", "KaiTi", serif;
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1;
+      color: #111;
+    }
+
+    .mi-cell:first-child {
+      margin-top: 0;
+    }
+
+    .mi-cell::before,
+    .mi-cell::after,
+    .mi-cell span::before,
+    .mi-cell span::after {
+      content: "";
+      position: absolute;
+      background: #d2d8dc;
+      pointer-events: none;
+    }
+
+    .mi-cell::before {
+      width: 1px;
+      height: 100%;
+      left: 50%;
+      top: 0;
+    }
+
+    .mi-cell::after {
+      height: 1px;
+      width: 100%;
+      left: 0;
+      top: 50%;
+    }
+
+    .mi-cell span::before,
+    .mi-cell span::after {
+      width: 1px;
+      height: 108%;
+      left: 50%;
+      top: -4%;
+      transform-origin: center;
+    }
+
+    .mi-cell span::before {
+      transform: rotate(45deg);
+    }
+
+    .mi-cell span::after {
+      transform: rotate(-45deg);
+    }
+
+    .mi-cell.blank {
+      color: transparent;
+    }
+
+    @media (max-width: 860px) {
+      header, .layout, .question, .writing-area {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      main {
+        width: min(100% - 18px, 1180px);
+        padding-top: 12px;
+      }
+
+      .controls, .choices {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>生字小遊戲</h1>
+        <div class="subtitle">選字、選注音、手寫練習都會記錄答題結果。手寫題請寫完後自己按答對或答錯。</div>
+      </div>
+      <button id="resetStats" class="warn" type="button">清除紀錄</button>
+    </header>
+
+    <section class="stats" aria-label="答題統計">
+      <div class="stat"><b id="sessionTotal">0</b><span>本次作答</span></div>
+      <div class="stat"><b id="sessionCorrect">0</b><span>本次答對</span></div>
+      <div class="stat"><b id="accuracy">0%</b><span>累積正確率</span></div>
+      <div class="stat"><b id="wrongCount">0</b><span>需複習生字</span></div>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <div class="controls">
+          <label>範圍
+            <select id="bookFilter">
+              <option value="all">全部</option>
+              <option value="一下">一下</option>
+              <option value="二上">二上</option>
+              <option value="wrong">只練錯題</option>
+            </select>
+          </label>
+          <label>模式
+            <select id="mode">
+              <option value="char">看注音選國字</option>
+              <option value="zhuyin">看國字選注音</option>
+              <option value="write">手寫練習</option>
+            </select>
+          </label>
+          <label>題數
+            <select id="roundSize">
+              <option value="10">10 題</option>
+              <option value="20">20 題</option>
+              <option value="999">不限題數</option>
+            </select>
+          </label>
+          <label>開始
+            <button id="nextBtn" class="primary" type="button">下一題</button>
+          </label>
+        </div>
+
+        <div class="question">
+          <div class="char-wrap">
+            <div id="displayChar" class="tianzi">字</div>
+            <div id="displayZhuyin" class="bpmf">ㄗˋ</div>
+          </div>
+          <div class="prompt">
+            <h2 id="promptTitle">按「下一題」開始</h2>
+            <div id="termGrid" class="term-grid" aria-label="語詞題目"></div>
+            <div id="promptMeta" class="prompt-meta">可以在 iPad 上用手指或觸控筆寫字。</div>
+          </div>
+        </div>
+
+        <div id="choices" class="choices"></div>
+
+        <div id="writingArea" class="writing-area">
+          <canvas id="writingCanvas" width="900" height="900" aria-label="手寫區"></canvas>
+          <div class="write-actions">
+            <button id="clearCanvas" type="button">清空格子</button>
+            <button id="showAnswer" type="button">看答案</button>
+            <button id="markCorrect" class="good" type="button">我寫對了</button>
+            <button id="markWrong" class="bad" type="button">我寫錯了</button>
+          </div>
+        </div>
+
+        <div id="answer" class="answer"></div>
+        <div class="actions">
+          <button id="againWrong" type="button">再練錯題</button>
+          <button id="shuffleBtn" type="button">換一題</button>
+        </div>
+      </div>
+
+      <aside class="panel side">
+        <h2>答錯紀錄</h2>
+        <div class="small">依累積錯題顯示，答對次數增加後仍會保留，方便週末複習。</div>
+        <div id="wrongList" class="wrong-list" style="margin-top:12px;"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const lessons = [
+      { book:"一下", lesson:1, title:"看", words:[["先","ㄒㄧㄢ"],["看","ㄎㄢˋ"],["空","ㄎㄨㄥ"],["雲","ㄩㄣˊ"],["鳥","ㄋㄧㄠˇ"],["草","ㄘㄠˇ"],["蟲","ㄔㄨㄥˊ"],["水","ㄕㄨㄟˇ"],["再","ㄗㄞˋ"],["玩","ㄨㄢˊ"]] },
+      { book:"一下", lesson:2, title:"花園裡有什麼", words:[["園","ㄩㄢˊ"],["聞","ㄨㄣˊ"],["香","ㄒㄧㄤ"],["正","ㄓㄥˋ"],["唱","ㄔㄤˋ"],["聽","ㄊㄧㄥ"],["沒","ㄇㄟˊ"],["找","ㄓㄠˇ"],["芽","ㄧㄚˊ"],["身","ㄕㄣ"]] },
+      { book:"一下", lesson:3, title:"媽媽的音樂會", words:[["樂","ㄩㄝˋ"],["會","ㄏㄨㄟˋ"],["始","ㄕˇ"],["陣","ㄓㄣˋ"],["菜","ㄘㄞˋ"],["就","ㄐㄧㄡˋ"],["桌","ㄓㄨㄛ"],["吃","ㄔ"],["後","ㄏㄡˋ"],["真","ㄓㄣ"]] },
+      { book:"一下", lesson:4, title:"鞋", words:[["船","ㄔㄨㄢˊ"],["港","ㄍㄤˇ"],["口","ㄎㄡˇ"],["把","ㄅㄚˇ"],["脫","ㄊㄨㄛ"],["靠","ㄎㄠˋ"],["像","ㄒㄧㄤˋ"],["享","ㄒㄧㄤˇ"],["受","ㄕㄡˋ"],["暖","ㄋㄨㄢˇ"]] },
+      { book:"一下", lesson:5, title:"小種子快長大", words:[["院","ㄩㄢˋ"],["種","ㄓㄨㄥˋ"],["它","ㄊㄚ"],["需","ㄒㄩ"],["陽","ㄧㄤˊ"],["澆","ㄐㄧㄠ"],["問","ㄨㄣˋ"],["怎","ㄗㄣˇ"],["沒","ㄇㄟˊ"],["長","ㄓㄤˇ"]] },
+      { book:"一下", lesson:6, title:"奶奶的小跟班", words:[["早","ㄗㄠˇ"],["跟","ㄍㄣ"],["他","ㄊㄚ"],["拿","ㄋㄚˊ"],["卡","ㄎㄚˇ"],["片","ㄆㄧㄢˋ"],["給","ㄍㄟˇ"],["寫","ㄒㄧㄝˇ"],["喜","ㄒㄧˇ"],["您","ㄋㄧㄣˊ"]] },
+      { book:"一下", lesson:7, title:"作夢的雲", words:[["己","ㄐㄧˇ"],["自","ㄗˋ"],["躺","ㄊㄤˇ"],["夢","ㄇㄥˋ"],["作","ㄗㄨㄛˋ"],["黑","ㄏㄟ"],["糖","ㄊㄤˊ"],["棉","ㄇㄧㄢˊ"],["成","ㄔㄥˊ"],["變","ㄅㄧㄢˋ"],["亮","ㄌㄧㄤˋ"],["漂","ㄆㄧㄠ"],["更","ㄍㄥˋ"],["得","ㄉㄜˊ"],["鵝","ㄜˊ"]] },
+      { book:"一下", lesson:8, title:"妹妹的紅雨鞋", words:[["滴","ㄉㄧ"],["穿","ㄔㄨㄢ"],["雙","ㄕㄨㄤ"],["雨","ㄩˇ"],["妹","ㄇㄟˋ"],["珠","ㄓㄨ"],["珍","ㄓㄣ"],["顆","ㄎㄜ"],["戲","ㄒㄧˋ"],["遊","ㄧㄡˊ"],["金","ㄐㄧㄣ"],["缸","ㄍㄤ"],["魚","ㄩˊ"],["面","ㄇㄧㄢˋ"],["落","ㄌㄨㄛˋ"],["游","ㄧㄡˊ"]] },
+      { book:"一下", lesson:9, title:"七彩的虹", words:[["掃","ㄙㄠˇ"],["國","ㄍㄨㄛˊ"],["太","ㄊㄞˋ"],["虹","ㄏㄨㄥˊ"],["彩","ㄘㄞˇ"],["低","ㄉㄧ"],["馬","ㄇㄚˇ"],["淨","ㄐㄧㄥˋ"],["洗","ㄒㄧˇ"],["除","ㄔㄨˊ"],["認","ㄖㄣˋ"],["很","ㄏㄣˇ"],["葉","ㄧㄝˋ"],["樹","ㄕㄨˋ"],["刷","ㄕㄨㄚ"],["送","ㄙㄨㄥˋ"]] },
+      { book:"一下", lesson:10, title:"和你在一起", words:[["風","ㄈㄥ"],["線","ㄒㄧㄢˋ"],["趣","ㄑㄩˋ"],["化","ㄏㄨㄚˋ"],["地","ㄉㄧˋ"],["跑","ㄆㄠˇ"],["奇","ㄑㄧˊ"],["神","ㄕㄣˊ"],["升","ㄕㄥ"],["等","ㄉㄥˇ"],["事","ㄕˋ"],["件","ㄐㄧㄢˋ"],["每","ㄇㄟˇ"],["笑","ㄒㄧㄠˋ"],["跳","ㄊㄧㄠˋ"],["情","ㄑㄧㄥˊ"]] },
+      { book:"一下", lesson:11, title:"生日快樂", words:[["時","ㄕˊ"],["記","ㄐㄧˋ"],["今","ㄐㄧㄣ"],["日","ㄖˋ"],["生","ㄕㄥ"],["收","ㄕㄡ"],["學","ㄒㄩㄝˊ"],["嗎","ㄇㄚ"],["道","ㄉㄠˋ"],["知","ㄓ"],["次","ㄘˋ"],["第","ㄉㄧˋ"],["福","ㄈㄨˊ"],["祝","ㄓㄨˋ"],["張","ㄓㄤ"],["謝","ㄒㄧㄝˋ"]] },
+      { book:"一下", lesson:12, title:"小黑", words:[["半","ㄅㄢˋ"],["點","ㄉㄧㄢˇ"],["前","ㄑㄧㄢˊ"],["燈","ㄉㄥ"],["想","ㄒㄧㄤˇ"],["息","ㄒㄧˊ"],["休","ㄒㄧㄡ"],["停","ㄊㄧㄥˊ"],["楚","ㄔㄨˇ"],["清","ㄑㄧㄥ"],["油","ㄧㄡˊ"],["加","ㄐㄧㄚ"],["幫","ㄅㄤ"],["吧","ㄅㄚ"],["兒","ㄦˊ"],["慢","ㄇㄢˋ"]] },
+      { book:"二上", lesson:1, title:"新學年新希望", words:[["年","ㄋㄧㄢˊ"],["希","ㄒㄧ"],["望","ㄨㄤˋ"],["坐","ㄗㄨㄛˋ"],["位","ㄨㄟˋ"],["本","ㄅㄣˇ"],["大","ㄉㄚˋ"],["淡","ㄉㄢˋ"],["書","ㄕㄨ"],["老","ㄌㄠˇ"],["師","ㄕ"],["以","ㄧˇ"],["為","ㄨㄟˋ"],["故","ㄍㄨˋ"],["用","ㄩㄥˋ"],["力","ㄌㄧˋ"],["只","ㄓˇ"],["現","ㄒㄧㄢˋ"],["還","ㄏㄞˊ"],["矮","ㄞˇ"]] },
+      { book:"二上", lesson:2, title:"一起做早餐", words:[["餐","ㄘㄢ"],["全","ㄑㄩㄢˊ"],["蛋","ㄉㄢˋ"],["煎","ㄐㄧㄢ"],["圓","ㄩㄢˊ"],["番","ㄈㄢ"],["茄","ㄑㄧㄝˊ"],["切","ㄑㄧㄝ"],["輪","ㄌㄨㄣˊ"],["保","ㄅㄠˇ"],["城","ㄔㄥˊ"],["方","ㄈㄤ"],["中","ㄓㄨㄥ"],["吐","ㄊㄨˇ"],["夾","ㄐㄧㄚˊ"],["司","ㄙ"],["接","ㄐㄧㄝ"],["醬","ㄐㄧㄤˋ"],["畫","ㄏㄨㄚˋ"],["臉","ㄌㄧㄢˇ"]] },
+      { book:"二上", lesson:3, title:"走過小巷", words:[["巷","ㄒㄧㄤˋ"],["叔","ㄕㄨˊ"],["牆","ㄑㄧㄤˊ"],["貓","ㄇㄠ"],["屋","ㄨ"],["捧","ㄆㄥˇ"],["蝴","ㄏㄨˊ"],["蝶","ㄉㄧㄝˊ"],["忙","ㄇㄤˊ"],["娶","ㄑㄩˇ"],["娘","ㄋㄧㄤˊ"],["黃","ㄏㄨㄤˊ"],["筆","ㄅㄧˇ"],["打","ㄉㄚˇ"],["扮","ㄅㄢˋ"],["模","ㄇㄛˊ"],["樣","ㄧㄤˋ"],["美","ㄇㄟˇ"],["麗","ㄌㄧˋ"],["越","ㄩㄝˋ"]] }
+    ];
+
+    const STORAGE_KEY = "kangxuan-character-game-v1";
+    const termHints = {
+      先:"先看", 看:"看見", 空:"天空", 雲:"白雲", 鳥:"小鳥", 草:"青草", 蟲:"小蟲", 水:"喝水", 再:"再見", 玩:"玩水",
+      園:"花園", 聞:"聞香", 香:"花香", 正:"正在", 唱:"唱歌", 聽:"聽見", 沒:"沒有", 找:"找到", 芽:"小芽", 身:"身上",
+      樂:"音樂", 會:"開會", 始:"開始", 陣:"一陣", 菜:"青菜", 就:"就是", 桌:"桌子", 吃:"吃飯", 後:"後來", 真:"真好",
+      船:"小船", 港:"港口", 口:"門口", 把:"一把", 脫:"脫鞋", 靠:"靠岸", 像:"好像", 享:"享受", 受:"接受", 暖:"溫暖",
+      院:"院子", 種:"種子", 它:"它們", 需:"需要", 陽:"太陽", 澆:"澆水", 問:"問好", 怎:"怎麼", 長:"長大",
+      早:"早上", 跟:"跟著", 他:"他們", 拿:"拿起", 卡:"卡片", 片:"一片", 給:"送給", 寫:"寫字", 喜:"喜歡", 您:"您好",
+      己:"自己", 自:"自己", 躺:"躺下", 夢:"作夢", 作:"作文", 黑:"黑色", 糖:"棉花糖", 棉:"棉花", 成:"變成", 變:"變化", 亮:"明亮", 漂:"漂亮", 更:"更加", 得:"覺得", 鵝:"白鵝",
+      滴:"水滴", 穿:"穿上", 雙:"一雙", 雨:"下雨", 妹:"妹妹", 珠:"珍珠", 珍:"珍貴", 顆:"一顆", 戲:"遊戲", 遊:"遊戲", 金:"金魚", 缸:"魚缸", 魚:"小魚", 面:"水面", 落:"落下", 游:"游泳",
+      掃:"打掃", 國:"國家", 太:"太陽", 虹:"彩虹", 彩:"色彩", 低:"低頭", 馬:"馬路", 淨:"乾淨", 洗:"洗手", 除:"除草", 認:"認字", 很:"很好", 葉:"樹葉", 樹:"大樹", 刷:"刷子", 送:"送給",
+      風:"風箏", 線:"毛線", 趣:"有趣", 化:"變化", 地:"草地", 跑:"跑步", 奇:"神奇", 神:"神奇", 升:"升起", 等:"等待", 事:"事情", 件:"一件", 每:"每天", 笑:"笑臉", 跳:"跳高", 情:"心情",
+      時:"時間", 記:"記得", 今:"今天", 日:"生日", 生:"生日", 收:"收到", 學:"學校", 嗎:"好嗎", 道:"知道", 知:"知道", 次:"一次", 第:"第一", 福:"祝福", 祝:"祝福", 張:"一張", 謝:"謝謝",
+      半:"半點", 點:"一點", 前:"前面", 燈:"電燈", 想:"想念", 息:"休息", 休:"休息", 停:"停止", 楚:"清楚", 清:"清楚", 油:"加油", 加:"加油", 幫:"幫忙", 吧:"好吧", 兒:"兒子", 慢:"慢慢",
+      年:"新年", 希:"希望", 望:"希望", 坐:"座位", 位:"座位", 本:"本子", 大:"大家", 淡:"淡水", 書:"書本", 老:"老師", 師:"老師", 以:"以為", 為:"以為", 故:"故事", 用:"用力", 力:"力氣", 只:"只有", 現:"現在", 還:"還有", 矮:"矮小",
+      餐:"早餐", 全:"全部", 蛋:"雞蛋", 煎:"煎蛋", 圓:"圓形", 番:"番茄", 茄:"番茄", 切:"切片", 輪:"一輪", 保:"保持", 城:"城堡", 方:"方形", 中:"中間", 吐:"吐司", 夾:"夾心", 司:"吐司", 接:"接著", 醬:"果醬", 畫:"畫畫", 臉:"笑臉",
+      巷:"小巷", 叔:"叔叔", 牆:"牆上", 貓:"小貓", 屋:"屋子", 捧:"捧花", 蝴:"蝴蝶", 蝶:"蝴蝶", 忙:"幫忙", 娶:"娶親", 娘:"新娘", 黃:"黃花", 筆:"毛筆", 打:"打扮", 扮:"打扮", 模:"模樣", 樣:"模樣", 美:"美麗", 麗:"美麗", 越:"越過"
+    };
+    const commonTerms = new Set([
+      ...Object.values(termHints),
+      "小看", "小狗", "小花", "小草", "小手", "小孩", "小朋友", "小學生",
+      "大鳥", "大魚", "大樹", "大人", "大門", "白雲", "黑雲", "紅花",
+      "生日", "升旗", "珍珠", "水珠", "水滴", "雨滴", "青草", "草地",
+      "看書", "看見", "看到", "聽見", "寫字", "認字", "打掃", "加油"
+    ]);
+    const allItems = lessons.flatMap(lesson => lesson.words.map((word, index) => ({
+      key: `${lesson.book}-${lesson.lesson}-${word[0]}`,
+      book: lesson.book,
+      lesson: lesson.lesson,
+      title: lesson.title,
+      char: word[0],
+      zhuyin: word[1],
+      term: termHints[word[0]] || word[0],
+      order: index + 1
+    })));
+
+    const state = {
+      current: null,
+      answered: false,
+      sessionTotal: 0,
+      sessionCorrect: 0,
+      roundAnswered: 0,
+      records: loadRecords()
+    };
+
+    const el = id => document.getElementById(id);
+    const canvas = el("writingCanvas");
+    const ctx = canvas.getContext("2d");
+    let drawing = false;
+
+    function loadRecords() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveRecords() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+    }
+
+    function recordFor(item) {
+      if (!state.records[item.key]) {
+        state.records[item.key] = { attempts: 0, correct: 0, wrong: 0 };
+      }
+      return state.records[item.key];
+    }
+
+    function shuffle(list) {
+      return [...list].sort(() => Math.random() - 0.5);
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[character]));
+    }
+
+    function splitZhuyin(value) {
+      const match = String(value).match(/^(.+?)([ˊˇˋ˙])?$/);
+      return {
+        symbols: match ? match[1] : value,
+        tone: match?.[2] || ""
+      };
+    }
+
+    function zhuyinHtml(value, blank = false) {
+      if (blank) return `<span class="bpmf blank">？</span>`;
+      const parts = splitZhuyin(value);
+      return `<span class="bpmf"><span class="bpmf-main">${escapeHtml(parts.symbols)}</span><span class="bpmf-tone">${escapeHtml(parts.tone)}</span></span>`;
+    }
+
+    function setZhuyin(target, value, blank = false) {
+      target.innerHTML = zhuyinHtml(value, blank);
+    }
+
+    function termCells(item, blankTarget = true) {
+      let blanked = false;
+      return [...item.term].slice(0, 3).map(character => {
+        const isTarget = blankTarget && !blanked && character === item.char;
+        if (isTarget) blanked = true;
+        return `<div class="mi-cell${isTarget ? " blank" : ""}"><span>${isTarget ? "" : escapeHtml(character)}</span></div>`;
+      }).join("");
+    }
+
+    function choiceLabel(item, mode) {
+      if (mode === "zhuyin") {
+        return zhuyinHtml(item.zhuyin);
+      }
+      return `<span class="choice-char">${escapeHtml(item.char)}</span>`;
+    }
+
+    function termIfReplaced(item, replacementChar) {
+      const characters = [...item.term].slice(0, 3);
+      const targetIndex = characters.indexOf(item.char);
+      if (targetIndex < 0) return "";
+      characters[targetIndex] = replacementChar;
+      return characters.join("");
+    }
+
+    function createsAnotherCommonTerm(item, candidate) {
+      if (candidate.char === item.char) return false;
+      const trialTerm = termIfReplaced(item, candidate.char);
+      return Boolean(trialTerm && trialTerm !== item.term && commonTerms.has(trialTerm));
+    }
+
+    function pool() {
+      const filter = el("bookFilter").value;
+      if (filter === "wrong") {
+        const wrong = allItems.filter(item => (state.records[item.key]?.wrong || 0) > 0);
+        return wrong.length ? wrong : allItems;
+      }
+      if (filter === "all") return allItems;
+      return allItems.filter(item => item.book === filter);
+    }
+
+    function pickQuestion() {
+      const items = pool();
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function choicesFor(item, mode) {
+      const field = mode === "zhuyin" ? "zhuyin" : "char";
+      const samePool = shuffle(allItems.filter(candidate => {
+        if (candidate[field] === item[field]) return false;
+        if (mode === "char" && createsAnotherCommonTerm(item, candidate)) return false;
+        return true;
+      }));
+      const values = [item];
+      for (const candidate of samePool) {
+        if (!values.some(value => value[field] === candidate[field])) values.push(candidate);
+        if (values.length === 4) break;
+      }
+      return shuffle(values);
+    }
+
+    function renderQuestion() {
+      const mode = el("mode").value;
+      const item = pickQuestion();
+      state.current = item;
+      state.answered = false;
+      el("answer").style.display = "none";
+      el("answer").textContent = "";
+      el("displayChar").textContent = mode === "zhuyin" ? item.char : "？";
+      setZhuyin(el("displayZhuyin"), item.zhuyin, mode === "zhuyin");
+      el("promptTitle").textContent =
+        mode === "char" ? "看注音和米字格語詞，選出正確國字" :
+        mode === "zhuyin" ? "看國字，選出正確注音" :
+        "看注音和米字格語詞，在格子裡寫出國字";
+      el("termGrid").innerHTML = mode === "zhuyin" ? termCells(item, false) : termCells(item, true);
+      el("promptMeta").innerHTML = `
+        ${escapeHtml(item.book)} L${item.lesson}〈${escapeHtml(item.title)}〉｜第 ${item.order} 個生字
+      `;
+      el("choices").innerHTML = "";
+      el("writingArea").style.display = mode === "write" ? "grid" : "none";
+
+      if (mode === "write") {
+        clearCanvas();
+        return;
+      }
+
+      const values = choicesFor(item, mode);
+      el("choices").innerHTML = values.map(option => `<button class="choice" type="button" data-value="${escapeHtml(option[mode === "zhuyin" ? "zhuyin" : "char"])}">${choiceLabel(option, mode)}</button>`).join("");
+      document.querySelectorAll(".choice").forEach(button => {
+        button.addEventListener("click", () => handleChoice(button));
+      });
+    }
+
+    function handleChoice(button) {
+      if (state.answered || !state.current) return;
+      const mode = el("mode").value;
+      const answer = mode === "zhuyin" ? state.current.zhuyin : state.current.char;
+      const isCorrect = button.dataset.value === answer;
+      document.querySelectorAll(".choice").forEach(choice => {
+        if (choice.dataset.value === answer) choice.classList.add("correct");
+      });
+      if (!isCorrect) button.classList.add("wrong");
+      finishAnswer(isCorrect);
+    }
+
+    function finishAnswer(isCorrect) {
+      if (!state.current || state.answered) return;
+      state.answered = true;
+      state.sessionTotal += 1;
+      state.roundAnswered += 1;
+      if (isCorrect) state.sessionCorrect += 1;
+      const record = recordFor(state.current);
+      record.attempts += 1;
+      if (isCorrect) record.correct += 1;
+      else record.wrong += 1;
+      record.last = new Date().toISOString();
+      saveRecords();
+      showAnswer();
+      updateStats();
+    }
+
+    function showAnswer() {
+      if (!state.current) return;
+      el("displayChar").textContent = state.current.char;
+      setZhuyin(el("displayZhuyin"), state.current.zhuyin);
+      el("answer").innerHTML = `答案：<span style="font-size:30px">${state.current.char}</span>　${state.current.zhuyin}　${escapeHtml(state.current.term)}<br>${state.current.book} L${state.current.lesson}〈${state.current.title}〉`;
+      el("answer").style.display = "block";
+    }
+
+    function updateStats() {
+      const totals = Object.values(state.records).reduce((acc, record) => {
+        acc.attempts += record.attempts || 0;
+        acc.correct += record.correct || 0;
+        if ((record.wrong || 0) > 0) acc.wrongItems += 1;
+        return acc;
+      }, { attempts: 0, correct: 0, wrongItems: 0 });
+      el("sessionTotal").textContent = state.sessionTotal;
+      el("sessionCorrect").textContent = state.sessionCorrect;
+      el("accuracy").textContent = totals.attempts ? `${Math.round(totals.correct / totals.attempts * 100)}%` : "0%";
+      el("wrongCount").textContent = totals.wrongItems;
+      renderWrongList();
+    }
+
+    function renderWrongList() {
+      const wrong = allItems
+        .map(item => ({ item, record: state.records[item.key] }))
+        .filter(row => (row.record?.wrong || 0) > 0)
+        .sort((a, b) => (b.record.wrong - a.record.wrong) || (a.item.book.localeCompare(b.item.book)));
+
+      el("wrongList").innerHTML = wrong.length ? wrong.map(({ item, record }) => `
+        <div class="wrong-item">
+          <div class="mini-char">${item.char}</div>
+          <div>
+            <b>${item.zhuyin}</b>
+            <div class="small">${item.book} L${item.lesson}〈${item.title}〉</div>
+            <div class="small">錯 ${record.wrong} 次｜對 ${record.correct || 0} 次</div>
+          </div>
+        </div>
+      `).join("") : `<div class="small">目前沒有錯題紀錄。</div>`;
+    }
+
+    function drawGuide() {
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, width, height);
+      ctx.strokeStyle = "#d2d8dc";
+      ctx.lineWidth = 3;
+      ctx.setLineDash([14, 14]);
+      ctx.beginPath();
+      ctx.moveTo(width / 2, 0);
+      ctx.lineTo(width / 2, height);
+      ctx.moveTo(0, height / 2);
+      ctx.lineTo(width, height / 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function clearCanvas() {
+      drawGuide();
+    }
+
+    function canvasPoint(event) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY
+      };
+    }
+
+    function startDraw(event) {
+      event.preventDefault();
+      drawing = true;
+      const point = canvasPoint(event);
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+    }
+
+    function moveDraw(event) {
+      if (!drawing) return;
+      event.preventDefault();
+      const point = canvasPoint(event);
+      ctx.setLineDash([]);
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 18;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineTo(point.x, point.y);
+      ctx.stroke();
+    }
+
+    function endDraw() {
+      drawing = false;
+    }
+
+    el("nextBtn").addEventListener("click", () => {
+      const limit = Number(el("roundSize").value);
+      if (limit !== 999 && state.roundAnswered >= limit) {
+        state.roundAnswered = 0;
+      }
+      renderQuestion();
+    });
+    el("shuffleBtn").addEventListener("click", renderQuestion);
+    el("showAnswer").addEventListener("click", showAnswer);
+    el("markCorrect").addEventListener("click", () => finishAnswer(true));
+    el("markWrong").addEventListener("click", () => finishAnswer(false));
+    el("clearCanvas").addEventListener("click", clearCanvas);
+    el("againWrong").addEventListener("click", () => {
+      el("bookFilter").value = "wrong";
+      renderQuestion();
+    });
+    el("resetStats").addEventListener("click", () => {
+      state.records = {};
+      state.sessionTotal = 0;
+      state.sessionCorrect = 0;
+      state.roundAnswered = 0;
+      localStorage.removeItem(STORAGE_KEY);
+      updateStats();
+    });
+    el("mode").addEventListener("change", renderQuestion);
+    el("bookFilter").addEventListener("change", renderQuestion);
+    canvas.addEventListener("pointerdown", startDraw);
+    canvas.addEventListener("pointermove", moveDraw);
+    canvas.addEventListener("pointerup", endDraw);
+    canvas.addEventListener("pointercancel", endDraw);
+    canvas.addEventListener("pointerleave", endDraw);
+
+    drawGuide();
+    updateStats();
+  </script>
+</body>
+</html>

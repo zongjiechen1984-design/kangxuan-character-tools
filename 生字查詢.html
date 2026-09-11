@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>康軒生字查詢</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1e2428;
+      --muted: #6a747a;
+      --line: #cfd8dc;
+      --paper: #fbfbf8;
+      --panel: #ffffff;
+      --accent: #2f675f;
+      --accent-soft: #e8f2ef;
+      --warn: #a94839;
+      --shadow: 0 14px 35px rgba(34, 45, 52, 0.10);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(47, 103, 95, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(47, 103, 95, 0.05) 1px, transparent 1px),
+        var(--paper);
+      background-size: 34px 34px;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+    }
+
+    main {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0 52px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: 22px;
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.1;
+      letter-spacing: 0;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .scope {
+      text-align: right;
+      color: var(--accent);
+      font-weight: 800;
+      line-height: 1.7;
+      white-space: nowrap;
+    }
+
+    .search-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      border-radius: 8px;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+    }
+
+    input {
+      width: 100%;
+      border: 2px solid #243236;
+      border-radius: 6px;
+      padding: 14px 16px;
+      font-size: 26px;
+      font-family: "DFKai-SB", "KaiTi", "Microsoft JhengHei", sans-serif;
+      outline: none;
+      background: #fff;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 0 18px;
+      min-height: 58px;
+      font-weight: 800;
+      font-size: 17px;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.secondary {
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink);
+      min-height: 38px;
+      padding: 0 13px;
+      font-size: 16px;
+    }
+
+    .summary {
+      margin: 20px 0 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 8px 22px rgba(34, 45, 52, 0.06);
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+    }
+
+    .char-box {
+      display: grid;
+      grid-template-columns: 74px 30px;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tianzi {
+      width: 74px;
+      height: 74px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      border: 2px solid #1b2024;
+      font-size: 46px;
+      font-family: "DFKai-SB", "KaiTi", serif;
+      line-height: 1;
+      background: #fff;
+    }
+
+    .tianzi::before,
+    .tianzi::after {
+      content: "";
+      position: absolute;
+      background: var(--line);
+    }
+
+    .tianzi::before {
+      width: 1px;
+      height: 100%;
+      left: 50%;
+      top: 0;
+    }
+
+    .tianzi::after {
+      height: 1px;
+      width: 100%;
+      left: 0;
+      top: 50%;
+    }
+
+    .bpmf {
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-weight: 900;
+      font-size: 20px;
+      line-height: 1;
+      min-height: 74px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .lesson {
+      text-align: right;
+      font-weight: 900;
+      color: var(--accent);
+      line-height: 1.45;
+    }
+
+    .order {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .meta {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      background: #fbfdfc;
+    }
+
+    .meta-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .meta-value {
+      margin-top: 4px;
+      font-weight: 900;
+      font-size: 18px;
+      min-height: 24px;
+    }
+
+    .not-found {
+      border-color: #e7c6be;
+      background: #fff8f6;
+    }
+
+    .not-found .lesson {
+      color: var(--warn);
+    }
+
+    .lesson-list {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    details {
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .word-strip {
+      margin-top: 10px;
+      line-height: 2;
+      font-size: 18px;
+    }
+
+    .word-strip span {
+      display: inline-block;
+      margin-right: 10px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 680px) {
+      header,
+      .search-row {
+        grid-template-columns: 1fr;
+      }
+
+      .scope {
+        text-align: left;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>生字查詢</h1>
+        <div class="subtitle">輸入一個或多個國字，查詢康軒已整理生字是否學過。</div>
+      </div>
+      <div class="scope">康軒一下 L1-L12<br>二上 L1-L3</div>
+    </header>
+
+    <section class="search-panel">
+      <div class="search-row">
+        <input id="query" type="text" autocomplete="off" placeholder="例：生升珍珠雲" autofocus>
+        <button id="searchBtn" type="button">查詢</button>
+        <button id="clearBtn" class="secondary" type="button">清除</button>
+      </div>
+      <div class="hint">可一次輸入多個字；重複字會自動合併。二上內容會陸續加入，目前先收錄 L1-L3。</div>
+      <div class="chips" aria-label="常混字快速查詢">
+        <button class="chip" type="button" data-query="生升">生 / 升</button>
+        <button class="chip" type="button" data-query="珍珠">珍 / 珠</button>
+        <button class="chip" type="button" data-query="游遊">游 / 遊</button>
+        <button class="chip" type="button" data-query="清情晴">清 / 情 / 晴</button>
+        <button class="chip" type="button" data-query="日目">日 / 目</button>
+        <button class="chip" type="button" data-query="年希望">二上 L1</button>
+        <button class="chip" type="button" data-query="餐蛋煎">二上 L2</button>
+        <button class="chip" type="button" data-query="巷牆貓">二上 L3</button>
+      </div>
+    </section>
+
+    <div id="summary" class="summary">請輸入要查的生字。</div>
+    <section id="results" class="results"></section>
+    <section id="lessonList" class="lesson-list"></section>
+  </main>
+
+  <script>
+    const lessons = [
+      { lesson: 1, title: "看", words: [["先","ㄒㄧㄢ","儿",6],["看","ㄎㄢˋ","目",9],["空","ㄎㄨㄥ","穴",8],["雲","ㄩㄣˊ","雨",12],["鳥","ㄋㄧㄠˇ","鳥",11],["草","ㄘㄠˇ","艸",10],["蟲","ㄔㄨㄥˊ","虫",18],["水","ㄕㄨㄟˇ","水",4],["再","ㄗㄞˋ","冂",6],["玩","ㄨㄢˊ","玉",8]] },
+      { lesson: 2, title: "花園裡有什麼", words: [["園","ㄩㄢˊ","囗",13],["聞","ㄨㄣˊ","耳",14],["香","ㄒㄧㄤ","香",9],["正","ㄓㄥˋ","止",5],["唱","ㄔㄤˋ","口",11],["聽","ㄊㄧㄥ","耳",22],["沒","ㄇㄟˊ","水",7],["找","ㄓㄠˇ","手",7],["芽","ㄧㄚˊ","艸",8],["身","ㄕㄣ","身",7]] },
+      { lesson: 3, title: "媽媽的音樂會", words: [["樂","ㄩㄝˋ","木",15],["會","ㄏㄨㄟˋ","曰",13],["始","ㄕˇ","女",8],["陣","ㄓㄣˋ","阜",10],["菜","ㄘㄞˋ","艸",12],["就","ㄐㄧㄡˋ","尢",12],["桌","ㄓㄨㄛ","木",10],["吃","ㄔ","口",6],["後","ㄏㄡˋ","彳",9],["真","ㄓㄣ","目",10]] },
+      { lesson: 4, title: "鞋", words: [["船","ㄔㄨㄢˊ","舟",11],["港","ㄍㄤˇ","水",12],["口","ㄎㄡˇ","口",3],["把","ㄅㄚˇ","手",7],["脫","ㄊㄨㄛ","肉",11],["靠","ㄎㄠˋ","非",15],["像","ㄒㄧㄤˋ","人",14],["享","ㄒㄧㄤˇ","亠",8],["受","ㄕㄡˋ","又",8],["暖","ㄋㄨㄢˇ","日",13]] },
+      { lesson: 5, title: "小種子快長大", words: [["院","ㄩㄢˋ","阜",10],["種","ㄓㄨㄥˋ","禾",14],["它","ㄊㄚ","宀",5],["需","ㄒㄩ","雨",14],["陽","ㄧㄤˊ","阜",12],["澆","ㄐㄧㄠ","水",15],["問","ㄨㄣˋ","口",11],["怎","ㄗㄣˇ","心",9],["沒","ㄇㄟˊ","水",7],["長","ㄓㄤˇ","長",8]] },
+      { lesson: 6, title: "奶奶的小跟班", words: [["早","ㄗㄠˇ","日",6],["跟","ㄍㄣ","足",13],["他","ㄊㄚ","人",5],["拿","ㄋㄚˊ","手",10],["卡","ㄎㄚˇ","卜",5],["片","ㄆㄧㄢˋ","片",4],["給","ㄍㄟˇ","糸",12],["寫","ㄒㄧㄝˇ","宀",15],["喜","ㄒㄧˇ","口",12],["您","ㄋㄧㄣˊ","心",11]] },
+      { lesson: 7, title: "作夢的雲", words: [["己","ㄐㄧˇ","己",3],["自","ㄗˋ","自",6],["躺","ㄊㄤˇ","身",15],["夢","ㄇㄥˋ","夕",14],["作","ㄗㄨㄛˋ","人",7],["黑","ㄏㄟ","黑",12],["糖","ㄊㄤˊ","米",16],["棉","ㄇㄧㄢˊ","木",12],["成","ㄔㄥˊ","戈",6],["變","ㄅㄧㄢˋ","言",23],["亮","ㄌㄧㄤˋ","亠",9],["漂","ㄆㄧㄠ","水",14],["更","ㄍㄥˋ","曰",7],["得","ㄉㄜˊ","彳",11],["鵝","ㄜˊ","鳥",18]] },
+      { lesson: 8, title: "妹妹的紅雨鞋", words: [["滴","ㄉㄧ","水",14],["穿","ㄔㄨㄢ","穴",9],["雙","ㄕㄨㄤ","隹",18],["雨","ㄩˇ","雨",8],["妹","ㄇㄟˋ","女",8],["珠","ㄓㄨ","玉",10],["珍","ㄓㄣ","玉",9],["顆","ㄎㄜ","頁",17],["戲","ㄒㄧˋ","戈",17],["遊","ㄧㄡˊ","辵",13],["金","ㄐㄧㄣ","金",8],["缸","ㄍㄤ","缶",9],["魚","ㄩˊ","魚",11],["面","ㄇㄧㄢˋ","面",9],["落","ㄌㄨㄛˋ","艸",13],["游","ㄧㄡˊ","水",12]] },
+      { lesson: 9, title: "七彩的虹", words: [["掃","ㄙㄠˇ","手",11],["國","ㄍㄨㄛˊ","囗",11],["太","ㄊㄞˋ","大",4],["虹","ㄏㄨㄥˊ","虫",9],["彩","ㄘㄞˇ","彡",11],["低","ㄉㄧ","人",7],["馬","ㄇㄚˇ","馬",10],["淨","ㄐㄧㄥˋ","水",11],["洗","ㄒㄧˇ","水",9],["除","ㄔㄨˊ","阜",10],["認","ㄖㄣˋ","言",14],["很","ㄏㄣˇ","彳",9],["葉","ㄧㄝˋ","艸",13],["樹","ㄕㄨˋ","木",16],["刷","ㄕㄨㄚ","刀",8],["送","ㄙㄨㄥˋ","辵",10]] },
+      { lesson: 10, title: "和你在一起", words: [["風","ㄈㄥ","風",9],["線","ㄒㄧㄢˋ","糸",15],["趣","ㄑㄩˋ","走",15],["化","ㄏㄨㄚˋ","匕",4],["地","ㄉㄧˋ","土",6],["跑","ㄆㄠˇ","足",12],["奇","ㄑㄧˊ","大",8],["神","ㄕㄣˊ","示",9],["升","ㄕㄥ","十",4],["等","ㄉㄥˇ","竹",12],["事","ㄕˋ","亅",8],["件","ㄐㄧㄢˋ","人",6],["每","ㄇㄟˇ","毋",7],["笑","ㄒㄧㄠˋ","竹",10],["跳","ㄊㄧㄠˋ","足",13],["情","ㄑㄧㄥˊ","心",11]] },
+      { lesson: 11, title: "生日快樂", words: [["時","ㄕˊ","日",10],["記","ㄐㄧˋ","言",10],["今","ㄐㄧㄣ","人",4],["日","ㄖˋ","日",4],["生","ㄕㄥ","生",5],["收","ㄕㄡ","攴",6],["學","ㄒㄩㄝˊ","子",16],["嗎","ㄇㄚ","口",13],["道","ㄉㄠˋ","辵",13],["知","ㄓ","矢",8],["次","ㄘˋ","欠",6],["第","ㄉㄧˋ","竹",11],["福","ㄈㄨˊ","示",13],["祝","ㄓㄨˋ","示",10],["張","ㄓㄤ","弓",11],["謝","ㄒㄧㄝˋ","言",17]] },
+      { lesson: 12, title: "小黑", words: [["半","ㄅㄢˋ","十",5],["點","ㄉㄧㄢˇ","黑",17],["前","ㄑㄧㄢˊ","刀",9],["燈","ㄉㄥ","火",16],["想","ㄒㄧㄤˇ","心",13],["息","ㄒㄧˊ","心",10],["休","ㄒㄧㄡ","人",6],["停","ㄊㄧㄥˊ","人",11],["楚","ㄔㄨˇ","木",13],["清","ㄑㄧㄥ","水",11],["油","ㄧㄡˊ","水",8],["加","ㄐㄧㄚ","力",5],["幫","ㄅㄤ","巾",17],["吧","ㄅㄚ","口",7],["兒","ㄦˊ","儿",8],["慢","ㄇㄢˋ","心",14]] },
+      { book: "二上", lesson: 1, title: "新學年新希望", words: [["年","ㄋㄧㄢˊ","干",6],["希","ㄒㄧ","巾",7],["望","ㄨㄤˋ","月",11],["坐","ㄗㄨㄛˋ","土",7],["位","ㄨㄟˋ","人",7],["本","ㄅㄣˇ","木",5],["大","ㄉㄚˋ","大",3],["淡","ㄉㄢˋ","水",11],["書","ㄕㄨ","曰",10],["老","ㄌㄠˇ","老",6],["師","ㄕ","巾",10],["以","ㄧˇ","人",5],["為","ㄨㄟˋ","火",9],["故","ㄍㄨˋ","攴",9],["用","ㄩㄥˋ","用",5],["力","ㄌㄧˋ","力",2],["只","ㄓˇ","口",5],["現","ㄒㄧㄢˋ","玉",11],["還","ㄏㄞˊ","辵",17],["矮","ㄞˇ","矢",13]] },
+      { book: "二上", lesson: 2, title: "一起做早餐", words: [["餐","ㄘㄢ","食",16],["全","ㄑㄩㄢˊ","入",6],["蛋","ㄉㄢˋ","虫",11],["煎","ㄐㄧㄢ","火",13],["圓","ㄩㄢˊ","囗",13],["番","ㄈㄢ","田",12],["茄","ㄑㄧㄝˊ","艸",9],["切","ㄑㄧㄝ","刀",4],["輪","ㄌㄨㄣˊ","車",15],["保","ㄅㄠˇ","人",9],["城","ㄔㄥˊ","土",9],["方","ㄈㄤ","方",4],["中","ㄓㄨㄥ","丨",4],["吐","ㄊㄨˇ","口",6],["夾","ㄐㄧㄚˊ","大",7],["司","ㄙ","口",5],["接","ㄐㄧㄝ","手",11],["醬","ㄐㄧㄤˋ","酉",18],["畫","ㄏㄨㄚˋ","田",12],["臉","ㄌㄧㄢˇ","肉",17]] },
+      { book: "二上", lesson: 3, title: "走過小巷", words: [["巷","ㄒㄧㄤˋ","己",9],["叔","ㄕㄨˊ","又",8],["牆","ㄑㄧㄤˊ","土",17],["貓","ㄇㄠ","犬",15],["屋","ㄨ","尸",9],["捧","ㄆㄥˇ","手",11],["蝴","ㄏㄨˊ","虫",15],["蝶","ㄉㄧㄝˊ","虫",15],["忙","ㄇㄤˊ","心",6],["娶","ㄑㄩˇ","女",11],["娘","ㄋㄧㄤˊ","女",10],["黃","ㄏㄨㄤˊ","黃",12],["筆","ㄅㄧˇ","竹",12],["打","ㄉㄚˇ","手",5],["扮","ㄅㄢˋ","手",7],["模","ㄇㄛˊ","木",15],["樣","ㄧㄤˋ","木",15],["美","ㄇㄟˇ","羊",9],["麗","ㄌㄧˋ","鹿",19],["越","ㄩㄝˋ","走",12]] }
+    ];
+
+    const index = new Map();
+    lessons.forEach(lesson => {
+      lesson.words.forEach(([char, zhuyin, radical = "待補", strokes = "待補"], i) => {
+        if (!index.has(char)) index.set(char, []);
+        index.get(char).push({
+          char,
+          zhuyin,
+          radical,
+          strokes,
+          book: lesson.book || "一下",
+          lesson: lesson.lesson,
+          title: lesson.title,
+          order: i + 1
+        });
+      });
+    });
+
+    const queryEl = document.getElementById("query");
+    const resultsEl = document.getElementById("results");
+    const summaryEl = document.getElementById("summary");
+    const lessonListEl = document.getElementById("lessonList");
+
+    function uniqueChars(text) {
+      return [...new Set([...text].filter(ch => /\p{Script=Han}/u.test(ch)))];
+    }
+
+    function resultCard(item) {
+      return `
+        <article class="card">
+          <div class="card-head">
+            <div class="char-box">
+              <div class="tianzi">${item.char}</div>
+              <div class="bpmf">${item.zhuyin}</div>
+            </div>
+            <div class="lesson">${item.book} L${item.lesson}<br>${item.title}</div>
+          </div>
+          <div class="order">生字順序：第 ${item.order} 個</div>
+          <div class="meta-grid">
+            <div class="meta">
+              <div class="meta-label">部首</div>
+              <div class="meta-value">${item.radical}</div>
+            </div>
+            <div class="meta">
+              <div class="meta-label">總筆畫</div>
+              <div class="meta-value">${item.strokes}</div>
+            </div>
+            <div class="meta">
+              <div class="meta-label">冊別</div>
+              <div class="meta-value">${item.book}</div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function notFoundCard(char) {
+      return `
+        <article class="card not-found">
+          <div class="card-head">
+            <div class="char-box">
+              <div class="tianzi">${char}</div>
+              <div class="bpmf">?</div>
+            </div>
+            <div class="lesson">尚未收錄</div>
+          </div>
+          <div class="order">目前已整理的生字表查不到這個字。</div>
+        </article>
+      `;
+    }
+
+    function search() {
+      const chars = uniqueChars(queryEl.value.trim());
+      if (chars.length === 0) {
+        summaryEl.textContent = "請輸入要查的生字。";
+        resultsEl.innerHTML = "";
+        return;
+      }
+
+      const cards = [];
+      let foundCount = 0;
+      chars.forEach(char => {
+        const items = index.get(char);
+        if (items) {
+          foundCount += 1;
+          items.forEach(item => cards.push(resultCard(item)));
+        } else {
+          cards.push(notFoundCard(char));
+        }
+      });
+
+      summaryEl.textContent = `查詢 ${chars.length} 個字，找到 ${foundCount} 個已學過的字。`;
+      resultsEl.innerHTML = cards.join("");
+    }
+
+    function renderLessonList() {
+      lessonListEl.innerHTML = lessons.map(lesson => {
+        const book = lesson.book || "一下";
+        const words = lesson.words.map(([char, zhuyin, radical = "待補", strokes = "待補"]) => `<span>${char} ${zhuyin}（${radical}／${strokes}畫）</span>`).join("");
+        return `
+          <details>
+            <summary>${book} L${lesson.lesson} ${lesson.title}</summary>
+            <div class="word-strip">${words}</div>
+          </details>
+        `;
+      }).join("");
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", search);
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      queryEl.value = "";
+      search();
+      queryEl.focus();
+    });
+    document.querySelectorAll(".chip").forEach(button => {
+      button.addEventListener("click", () => {
+        queryEl.value = button.dataset.query;
+        search();
+      });
+    });
+    queryEl.addEventListener("input", search);
+    queryEl.addEventListener("keydown", event => {
+      if (event.key === "Enter") search();
+    });
+
+    renderLessonList();
+  </script>
+</body>
+</html>
