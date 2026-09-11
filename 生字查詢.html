@@ -287,6 +287,50 @@
       min-height: 24px;
     }
 
+    .info-block {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      background: #fbfdfc;
+    }
+
+    .info-block.warning {
+      border-color: #e7c6be;
+      background: #fff8f6;
+    }
+
+    .info-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 7px;
+    }
+
+    .term-list,
+    .confusion-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .term-chip,
+    .confusion-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.4;
+      padding: 5px 10px;
+    }
+
+    .confusion-chip {
+      border-color: #d9b0a8;
+      color: var(--warn);
+    }
+
     .not-found {
       border-color: #e7c6be;
       background: #fff8f6;
@@ -397,6 +441,32 @@
       { book: "二上", lesson: 3, title: "走過小巷", words: [["巷","ㄒㄧㄤˋ","己",9],["叔","ㄕㄨˊ","又",8],["牆","ㄑㄧㄤˊ","土",17],["貓","ㄇㄠ","犬",15],["屋","ㄨ","尸",9],["捧","ㄆㄥˇ","手",11],["蝴","ㄏㄨˊ","虫",15],["蝶","ㄉㄧㄝˊ","虫",15],["忙","ㄇㄤˊ","心",6],["娶","ㄑㄩˇ","女",11],["娘","ㄋㄧㄤˊ","女",10],["黃","ㄏㄨㄤˊ","黃",12],["筆","ㄅㄧˇ","竹",12],["打","ㄉㄚˇ","手",5],["扮","ㄅㄢˋ","手",7],["模","ㄇㄛˊ","木",15],["樣","ㄧㄤˋ","木",15],["美","ㄇㄟˇ","羊",9],["麗","ㄌㄧˋ","鹿",19],["越","ㄩㄝˋ","走",12]] }
     ];
 
+    const termHints = {
+      先:"先看", 看:"看見", 空:"天空", 雲:"白雲", 鳥:"小鳥", 草:"青草", 蟲:"小蟲", 水:"喝水", 再:"再見", 玩:"玩水",
+      園:"花園", 聞:"聞香", 香:"花香", 正:"正在", 唱:"唱歌", 聽:"聽見", 沒:"沒有", 找:"找到", 芽:"小芽", 身:"身上",
+      樂:"音樂", 會:"開會", 始:"開始", 陣:"一陣", 菜:"青菜", 就:"就是", 桌:"桌子", 吃:"吃飯", 後:"後來", 真:"真好",
+      船:"小船", 港:"港口", 口:"門口", 把:"一把", 脫:"脫鞋", 靠:"靠岸", 像:"好像", 享:"享受", 受:"接受", 暖:"溫暖",
+      院:"院子", 種:"種子", 它:"它們", 需:"需要", 陽:"太陽", 澆:"澆水", 問:"問好", 怎:"怎麼", 長:"長大",
+      早:"早上", 跟:"跟著", 他:"他們", 拿:"拿起", 卡:"卡片", 片:"一片", 給:"送給", 寫:"寫字", 喜:"喜歡", 您:"您好",
+      己:"自己", 自:"自己", 躺:"躺下", 夢:"作夢", 作:"作文", 黑:"黑色", 糖:"棉花糖", 棉:"棉花", 成:"變成", 變:"變化", 亮:"明亮", 漂:"漂亮", 更:"更加", 得:"覺得", 鵝:"白鵝",
+      滴:"水滴", 穿:"穿上", 雙:"一雙", 雨:"下雨", 妹:"妹妹", 珠:"珍珠", 珍:"珍貴", 顆:"一顆", 戲:"遊戲", 遊:"遊戲", 金:"金魚", 缸:"魚缸", 魚:"小魚", 面:"水面", 落:"落下", 游:"游泳",
+      掃:"打掃", 國:"國家", 太:"太陽", 虹:"彩虹", 彩:"色彩", 低:"低頭", 馬:"馬路", 淨:"乾淨", 洗:"洗手", 除:"除草", 認:"認字", 很:"很好", 葉:"樹葉", 樹:"大樹", 刷:"刷子", 送:"送給",
+      風:"風箏", 線:"毛線", 趣:"有趣", 化:"變化", 地:"草地", 跑:"跑步", 奇:"神奇", 神:"神奇", 升:"升起", 等:"等待", 事:"事情", 件:"一件", 每:"每天", 笑:"笑臉", 跳:"跳高", 情:"心情",
+      時:"時間", 記:"記得", 今:"今天", 日:"生日", 生:"生日", 收:"收到", 學:"學校", 嗎:"好嗎", 道:"知道", 知:"知道", 次:"一次", 第:"第一", 福:"祝福", 祝:"祝福", 張:"一張", 謝:"謝謝",
+      半:"半點", 點:"一點", 前:"前面", 燈:"電燈", 想:"想念", 息:"休息", 休:"休息", 停:"停止", 楚:"清楚", 清:"清楚", 油:"加油", 加:"加油", 幫:"幫忙", 吧:"好吧", 兒:"兒子", 慢:"慢慢",
+      年:"新年", 希:"希望", 望:"希望", 坐:"座位", 位:"座位", 本:"本子", 大:"大家", 淡:"淡水", 書:"書本", 老:"老師", 師:"老師", 以:"以為", 為:"以為", 故:"故事", 用:"用力", 力:"力氣", 只:"只有", 現:"現在", 還:"還有", 矮:"矮小",
+      餐:"早餐", 全:"全部", 蛋:"雞蛋", 煎:"煎蛋", 圓:"圓形", 番:"番茄", 茄:"番茄", 切:"切片", 輪:"一輪", 保:"保持", 城:"城堡", 方:"方形", 中:"中間", 吐:"吐司", 夾:"夾心", 司:"吐司", 接:"接著", 醬:"果醬", 畫:"畫畫", 臉:"笑臉",
+      巷:"小巷", 叔:"叔叔", 牆:"牆上", 貓:"小貓", 屋:"屋子", 捧:"捧花", 蝴:"蝴蝶", 蝶:"蝴蝶", 忙:"幫忙", 娶:"娶親", 娘:"新娘", 黃:"黃花", 筆:"毛筆", 打:"打扮", 扮:"打扮", 模:"模樣", 樣:"模樣", 美:"美麗", 麗:"美麗", 越:"越過"
+    };
+
+    const confusionHints = {
+      生:["升"], 升:["生"], 珍:["珠"], 珠:["珍"], 游:["遊"], 遊:["游"],
+      清:["情","晴"], 情:["清","晴"], 晴:["清","情"], 日:["目"], 目:["日"],
+      己:["已","巳"], 自:["白","目"], 低:["底"], 作:["做"], 坐:["座"],
+      園:["圓"], 圓:["園"], 馬:["媽","嗎"], 嗎:["媽","馬"], 亮:["高"],
+      休:["体"], 後:["候"], 只:["隻"], 他:["她"], 它:["他"], 的:["地","得"]
+    };
+
     const index = new Map();
     lessons.forEach(lesson => {
       lesson.words.forEach(([char, zhuyin, radical = "待補", strokes = "待補"], i) => {
@@ -423,6 +493,16 @@
       return [...new Set([...text].filter(ch => /\p{Script=Han}/u.test(ch)))];
     }
 
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[character]));
+    }
+
     function splitZhuyin(value) {
       const match = String(value).match(/^(.+?)([ˊˇˋ˙])?$/);
       return {
@@ -438,6 +518,37 @@
         <div class="bpmf">
           <span class="bpmf-main">${parts.symbols}</span>
           <span class="bpmf-tone">${parts.tone}</span>
+        </div>
+      `;
+    }
+
+    function termsFor(char) {
+      const terms = new Set();
+      if (termHints[char]) terms.add(termHints[char]);
+      Object.values(termHints).forEach(term => {
+        if (term.includes(char)) terms.add(term);
+      });
+      return [...terms].slice(0, 3);
+    }
+
+    function termBlock(char) {
+      const terms = termsFor(char);
+      if (terms.length === 0) return "";
+      return `
+        <div class="info-block">
+          <div class="info-label">語詞例子</div>
+          <div class="term-list">${terms.map(term => `<span class="term-chip">${escapeHtml(term)}</span>`).join("")}</div>
+        </div>
+      `;
+    }
+
+    function confusionBlock(char) {
+      const hints = confusionHints[char] || [];
+      if (hints.length === 0) return "";
+      return `
+        <div class="info-block warning">
+          <div class="info-label">相似字提醒</div>
+          <div class="confusion-list">${hints.map(hint => `<span class="confusion-chip">${escapeHtml(char)} / ${escapeHtml(hint)}</span>`).join("")}</div>
         </div>
       `;
     }
@@ -467,6 +578,8 @@
               <div class="meta-value">${item.book}</div>
             </div>
           </div>
+          ${termBlock(item.char)}
+          ${confusionBlock(item.char)}
         </article>
       `;
     }
