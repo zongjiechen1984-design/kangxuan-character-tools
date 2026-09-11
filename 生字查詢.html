@@ -171,7 +171,7 @@
 
     .char-box {
       display: grid;
-      grid-template-columns: 74px 30px;
+      grid-template-columns: 74px 34px;
       align-items: center;
       gap: 4px;
     }
@@ -211,15 +211,40 @@
     }
 
     .bpmf {
-      writing-mode: vertical-rl;
-      text-orientation: upright;
-      font-weight: 900;
-      font-size: 20px;
-      line-height: 1;
       min-height: 74px;
-      display: flex;
+      display: grid;
+      grid-template-columns: 21px 13px;
       justify-content: center;
       align-items: center;
+      column-gap: 0;
+      color: #111;
+      font-weight: 1000;
+    }
+
+    .bpmf-main {
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-size: 21px;
+      line-height: 1;
+      font-weight: 1000;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .bpmf-tone {
+      font-size: 18px;
+      font-weight: 1000;
+      line-height: 1;
+      min-height: 58px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .bpmf.blank {
+      grid-template-columns: 1fr;
+      font-size: 24px;
     }
 
     .lesson {
@@ -398,13 +423,32 @@
       return [...new Set([...text].filter(ch => /\p{Script=Han}/u.test(ch)))];
     }
 
+    function splitZhuyin(value) {
+      const match = String(value).match(/^(.+?)([ˊˇˋ˙])?$/);
+      return {
+        symbols: match ? match[1] : value,
+        tone: match?.[2] || ""
+      };
+    }
+
+    function zhuyinHtml(value, blank = false) {
+      if (blank) return `<div class="bpmf blank">?</div>`;
+      const parts = splitZhuyin(value);
+      return `
+        <div class="bpmf">
+          <span class="bpmf-main">${parts.symbols}</span>
+          <span class="bpmf-tone">${parts.tone}</span>
+        </div>
+      `;
+    }
+
     function resultCard(item) {
       return `
         <article class="card">
           <div class="card-head">
             <div class="char-box">
               <div class="tianzi">${item.char}</div>
-              <div class="bpmf">${item.zhuyin}</div>
+              ${zhuyinHtml(item.zhuyin)}
             </div>
             <div class="lesson">${item.book} L${item.lesson}<br>${item.title}</div>
           </div>
@@ -433,7 +477,7 @@
           <div class="card-head">
             <div class="char-box">
               <div class="tianzi">${char}</div>
-              <div class="bpmf">?</div>
+              ${zhuyinHtml("", true)}
             </div>
             <div class="lesson">尚未收錄</div>
           </div>
