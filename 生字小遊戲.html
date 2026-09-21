@@ -275,6 +275,7 @@
       transform: scale(0.82);
       transition: opacity 160ms ease, transform 160ms ease;
       pointer-events: none;
+      position: relative;
     }
 
     .feedback-mark.show {
@@ -286,6 +287,65 @@
       border: 9px solid var(--good);
       background: #e9f6ef;
       box-shadow: 0 10px 24px rgba(40, 125, 85, 0.18);
+    }
+
+    .feedback-mark.correct::before {
+      content: "✓";
+      color: var(--good);
+      font-size: 72px;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1;
+    }
+
+    .feedback-mark.level-up {
+      animation: level-pop 620ms cubic-bezier(.16, 1.26, .42, 1) both;
+    }
+
+    .feedback-mark.level-up::after {
+      content: "升級!";
+      position: absolute;
+      left: 50%;
+      top: -34px;
+      transform: translateX(-50%);
+      color: #d97b40;
+      background: #fff7df;
+      border: 2px solid #e9bd6d;
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 18px;
+      font-weight: 1000;
+      white-space: nowrap;
+      box-shadow: 0 8px 18px rgba(217, 123, 64, 0.2);
+      animation: level-label 900ms ease-out both;
+    }
+
+    .feedback-mark.level-up span {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #f3c64d;
+      opacity: 0;
+      animation: level-spark 780ms ease-out both;
+    }
+
+    .feedback-mark.level-up span:nth-child(1) {
+      left: -8px;
+      top: 20px;
+    }
+
+    .feedback-mark.level-up span:nth-child(2) {
+      right: -10px;
+      top: 28px;
+      background: #69b58e;
+      animation-delay: 60ms;
+    }
+
+    .feedback-mark.level-up span:nth-child(3) {
+      left: 40px;
+      bottom: -10px;
+      background: #d97b40;
+      animation-delay: 100ms;
     }
 
     .feedback-mark.wrong {
@@ -300,6 +360,53 @@
       font-size: 92px;
       line-height: 0.8;
       font-family: Arial, Helvetica, sans-serif;
+    }
+
+    @keyframes level-pop {
+      0% {
+        opacity: 0;
+        transform: scale(0.55) translateY(12px);
+        box-shadow: 0 0 0 0 rgba(40, 125, 85, 0);
+      }
+      42% {
+        opacity: 1;
+        transform: scale(1.18) translateY(-6px);
+        box-shadow: 0 0 0 14px rgba(40, 125, 85, 0.12);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        box-shadow: 0 10px 24px rgba(40, 125, 85, 0.18);
+      }
+    }
+
+    @keyframes level-label {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, 12px) scale(0.8);
+      }
+      35% {
+        opacity: 1;
+        transform: translate(-50%, -4px) scale(1.06);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -10px) scale(1);
+      }
+    }
+
+    @keyframes level-spark {
+      0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(0);
+      }
+      35% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.15) translateY(-28px);
+      }
     }
 
     .choices {
@@ -975,9 +1082,14 @@
     function setFeedbackMark(result) {
       const mark = el("feedbackMark");
       mark.className = "feedback-mark";
+      mark.innerHTML = "";
       mark.removeAttribute("aria-label");
       if (!result) return;
       mark.classList.add("show", result);
+      if (result === "correct") {
+        mark.classList.add("level-up");
+        mark.innerHTML = "<span></span><span></span><span></span>";
+      }
       mark.setAttribute("aria-label", result === "correct" ? "答對" : "答錯");
     }
 
