@@ -38,9 +38,27 @@ const { pathToFileURL } = require('node:url');
       await page.mouse.move(...points[0]); await page.mouse.down();
       for (const point of points.slice(1)) await page.mouse.move(...point, { steps: 6 });
       await page.mouse.up(); await page.waitForTimeout(300);
+      const count = data.medians.indexOf(median) + 1;
+      if (await page.locator('#acceptedInk path').count() !== count) throw Error('original ink not retained');
+      if (count === 1) {
+        const firstInk = await page.locator('#acceptedInk path').getAttribute('d');
+        if (firstInk.split('L').length <= median.length) throw Error('ink replaced by standard median');
+        await page.mouse.move(box.x + 12, box.y + 12); await page.mouse.down();
+        await page.mouse.move(box.x + box.width - 12, box.y + 12, { steps: 12 }); await page.mouse.up();
+        await page.waitForFunction(() => document.querySelector('#status').textContent.includes('再試一次，第 2 筆'));
+        if (await page.locator('#acceptedInk path').count() !== 1 || await page.locator('#acceptedInk path').getAttribute('d') !== firstInk) throw Error('wrong stroke erased or changed accepted ink');
+      }
     }
     await page.waitForFunction(() => document.querySelector('#status').textContent.startsWith('完成！'), { timeout: 5000 });
     if (!await page.evaluate(() => JSON.parse(localStorage.getItem('kangxuan-stroke-practice-v1')).some(r => r.char === '生'))) throw Error('missing record');
+    const paths = await page.locator('#acceptedInk path').evaluateAll(nodes => nodes.map(n => n.getAttribute('d')));
+    const transform = await page.locator('#acceptedInk').getAttribute('transform');
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await page.waitForFunction(old => document.querySelector('#acceptedInk').getAttribute('transform') !== old, transform);
+    if (JSON.stringify(await page.locator('#acceptedInk path').evaluateAll(nodes => nodes.map(n => n.getAttribute('d')))) !== JSON.stringify(paths)) throw Error('resize changed ink');
+    await page.screenshot({path:'stroke-original-ink.png',fullPage:true});
+    await page.getByRole('button', {name:'重寫',exact:true}).click();
+    if (await page.locator('#acceptedInk path').count() !== 0) throw Error('restart left previous ink');
     await page.reload();
     await page.waitForFunction(() => document.querySelector('#recordSummary').textContent.includes('完成 1 次'));
     await page.locator('#book').selectOption('二上');
@@ -52,6 +70,6 @@ const { pathToFileURL } = require('node:url');
     await page.waitForFunction(() => document.querySelector('#status').textContent.includes('無法載入'));
     if (!(await page.locator('#replay').isDisabled())) throw Error('failed load still enabled');
     if (errors.length) throw Error(errors.join('\n'));
-    console.log('PASS: desktop/iPad/iPhone layout, animation, stepping, modes, actual handwriting, record persistence, lessons, network failure');
+    console.log('PASS: original ink retained, incorrect stroke rolled back, resize and restart, desktop/iPad/iPhone layout, animation, modes, records, lessons, network failure');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });
