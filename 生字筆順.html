@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>生字筆順 | 康軒國語生字工具</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root { color: #203236; background: #f5f8f7; font-family: "Microsoft JhengHei", system-ui, sans-serif; }
+    body { margin: 0; }
+    main { max-width: 960px; margin: auto; padding: 20px 16px max(24px, env(safe-area-inset-bottom)); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 2px solid #2f675f; padding-bottom: 14px; }
+    h1 { font-size: 28px; margin: 0; }
+    a { color: #2f675f; }
+    button, input, select { font: inherit; min-height: 46px; border: 1px solid #b7c9c5; border-radius: 6px; background: white; color: inherit; }
+    button { cursor: pointer; padding: 10px 14px; font-weight: 700; touch-action: manipulation; }
+    button:hover { background: #edf5f2; }
+    button:disabled { opacity: .45; cursor: default; }
+    button.active, button.primary { background: #2f675f; color: white; border-color: #2f675f; }
+    :focus-visible { outline: 3px solid #c77532; outline-offset: 3px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(240px, 1fr); gap: 32px; margin-top: 22px; }
+    .search { display: flex; gap: 8px; margin-bottom: 14px; }
+    input { width: 100%; min-width: 0; padding: 10px; font-size: 22px; }
+    .search button { flex-shrink: 0; }
+    .modes { display: flex; gap: 6px; margin-bottom: 20px; }
+    .modes button { flex: 1; }
+    .character { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .board { position: relative; width: min(340px, calc(100vw - 100px)); aspect-ratio: 1; border: 2px solid #203236; background: #fff; touch-action: none; }
+    .board::before, .board::after { content: ""; position: absolute; pointer-events: none; inset: 0; }
+    .board::before { background: linear-gradient(90deg, transparent calc(50% - .5px), #cbd6d2 50%, transparent calc(50% + .5px)), linear-gradient(transparent calc(50% - .5px), #cbd6d2 50%, transparent calc(50% + .5px)); }
+    .board::after { background: linear-gradient(45deg, transparent calc(50% - .5px), #e0e7e3 50%, transparent calc(50% + .5px)), linear-gradient(-45deg, transparent calc(50% - .5px), #e0e7e3 50%, transparent calc(50% + .5px)); }
+    #writer { position: absolute; inset: 0; z-index: 1; }
+    .bpmf { position: relative; padding-right: 18px; flex-shrink: 0; font-family: "BpmfKai", "DFKai-SB", "BiauKai", serif; }
+    #symbols { display: flex; flex-direction: column; font-size: 30px; line-height: 1.1; }
+    #tone { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 30px; }
+    .bpmf.neutral #tone { top: -20px; right: 18px; transform: none; }
+    #status { min-height: 52px; text-align: center; font-size: 18px; font-weight: 700; margin: 16px 0 4px; }
+    .controls { display: flex; justify-content: center; gap: 10px; }
+    .controls button { display: flex; align-items: center; gap: 6px; }
+    svg.lucide { width: 20px; height: 20px; }
+    .settings { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin: 16px 0; }
+    .settings label { display: flex; gap: 6px; align-items: center; }
+    .settings input { width: 20px; min-height: 20px; }
+    select { max-width: 100%; padding: 8px; }
+    #meta { text-align: center; color: #5d6a70; line-height: 1.8; }
+    .filters { display: grid; grid-template-columns: 80px minmax(0,1fr); gap: 8px; }
+    .characters { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; margin-top: 16px; }
+    .characters button { font-family: "DFKai-SB", "BiauKai", serif; font-size: 28px; padding: 4px; aspect-ratio: 1; }
+    .record { border-top: 1px solid #cbd6d2; margin-top: 22px; padding-top: 16px; line-height: 1.8; }
+    #history { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    #history button { font-size: 18px; }
+    footer { border-top: 1px solid #cbd6d2; margin-top: 30px; padding-top: 14px; font-size: 13px; color: #5d6a70; line-height: 1.8; }
+    @media(max-width:700px) { .layout { grid-template-columns: 1fr; gap: 24px; } h1 { font-size: 24px; } .characters { grid-template-columns: repeat(6,minmax(0,1fr)); } }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5.0/dist/hanzi-writer.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script src="stroke-lessons.js" defer></script>
+  <script src="stroke-converter.js" defer></script>
+  <script src="stroke-data.js" defer></script>
+</head>
+<body>
+<main>
+  <header><h1>生字筆順</h1><a href="index.html">生字工具首頁</a></header>
+  <div class="layout">
+    <section aria-label="筆順與練寫">
+      <form class="search" id="search"><input id="query" aria-label="輸入一個國字" placeholder="輸入國字" maxlength="2"><button type="submit">查字</button></form>
+      <div class="modes" role="group" aria-label="練習模式">
+        <button data-mode="watch" class="active" aria-pressed="true">看筆順</button><button data-mode="trace" aria-pressed="false">描寫</button><button data-mode="practice" aria-pressed="false">自己寫</button>
+      </div>
+      <div class="character"><div class="board"><div id="writer"></div></div><div class="bpmf" id="bpmf"><span id="symbols"></span><span id="tone"></span></div></div>
+      <div id="status" role="status" aria-live="polite">載入中…</div>
+      <div class="controls">
+        <button id="replay" class="primary" disabled title="重新播放或重寫"><i data-lucide="rotate-ccw"></i><span>播放</span></button>
+        <button id="step" disabled title="顯示下一筆"><i data-lucide="skip-forward"></i><span>下一筆</span></button>
+        <button id="next" title="下一個生字"><i data-lucide="arrow-right"></i><span>下一字</span></button>
+      </div>
+      <div class="settings"><label>速度 <select id="speed"><option value="0.6">慢</option><option value="1" selected>標準</option><option value="1.8">快</option></select></label><label><input type="checkbox" id="outline" checked>字形提示</label></div>
+      <div id="meta"></div>
+    </section>
+    <section aria-label="課次生字與練寫紀錄">
+      <div class="filters"><select id="book" aria-label="冊別"><option>一下</option><option>二上</option></select><select id="lesson" aria-label="課次"></select></div>
+      <div class="characters" id="characters"></div>
+      <div class="record"><strong>練寫紀錄</strong><div id="recordSummary">尚未完成練寫</div><div id="history"></div></div>
+    </section>
+  </div>
+  <footer>字形與筆順：教育部 · <a href="https://github.com/g0v/zh-stroke-data">g0v 筆順資料與來源說明</a>（非營利教學使用） · 動畫：<a href="https://hanziwriter.org">Hanzi Writer</a> · <a href="https://stroke-order.learningweb.moe.edu.tw/">教育部筆順網</a></footer>
+</main>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const $ = id => document.getElementById(id);
+    const cache = new Map();
+    const storageKey = 'kangxuan-stroke-practice-v1';
+    let records = [];
+    try { const saved = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (Array.isArray(saved)) records = saved; } catch {}
+    let current = '先', mode = 'watch', writer, data, token = 0, stroke = 0, busy = false, loaded = false;
+    const all = strokeLessons.flatMap(l => l.words.map(w => ({ char:w[0], zhuyin:w[1], radical:w[2], strokes:w[3], book:l.book || '一下', lesson:l.lesson, title:l.title })));
+    const selectedLesson = () => strokeLessons.find(l => (l.book || '一下') === $('book').value && String(l.lesson) === $('lesson').value);
+    const info = () => all.find(x => x.char === current && x.book === $('book').value && String(x.lesson) === $('lesson').value) || all.find(x => x.char === current);
+    function controls() { $('replay').disabled = !loaded || busy; $('step').disabled = !loaded || busy || mode !== 'watch'; }
+    function renderRecords() {
+      $('recordSummary').textContent = `完成 ${records.length} 次 · 練過 ${new Set(records.map(r => r.char)).size} 個字`;
+      $('history').replaceChildren();
+      [...new Set(records.slice().reverse().map(r => r.char))].slice(0,12).forEach(char => {
+        const b = document.createElement('button'); b.textContent = char; b.onclick = () => load(char); $('history').append(b);
+      });
+    }
+    function renderCharacters() {
+      $('characters').replaceChildren();
+      selectedLesson().words.forEach(([char]) => {
+        const b = document.createElement('button'); b.textContent = char; b.classList.toggle('active', char === current); b.setAttribute('aria-pressed', String(char === current)); b.onclick = () => load(char); $('characters').append(b);
+      });
+    }
+    function renderLessons() {
+      $('lesson').replaceChildren();
+      strokeLessons.filter(l => (l.book || '一下') === $('book').value).forEach(l => { const o = document.createElement('option'); o.value = l.lesson; o.textContent = `L${l.lesson} ${l.title}`; $('lesson').append(o); });
+      load(selectedLesson().words[0][0]);
+    }
+    function build() {
+      if (writer) { writer.cancelQuiz(); writer.pauseAnimation(); }
+      $('writer').replaceChildren(); stroke = 0; busy = false;
+      const size = $('writer').clientWidth;
+      writer = HanziWriter.create('writer', current, { width:size, height:size, padding:22, showCharacter:false, showOutline:$('outline').checked, strokeColor:'#203236', outlineColor:'#dae3df', drawingColor:'#266fbd', highlightColor:'#2f9b69', strokeAnimationSpeed:Number($('speed').value), strokeFadeDuration:0, charDataLoader:() => data });
+      controls();
+    }
+    function startPractice() {
+      const version = token;
+      $('status').textContent = `第 1 筆／共 ${data.strokes.length} 筆`;
+      writer.quiz({ showHintAfterMisses:mode === 'trace' ? 1 : 3,
+        onCorrectStroke:d => { if (version === token) $('status').textContent = `完成 ${d.strokeNum + 1}／${data.strokes.length} 筆`; },
+        onMistake:d => { if (version === token) $('status').textContent = `再試一次，第 ${d.strokeNum + 1} 筆`; },
+        onComplete:d => {
+          if (version !== token) return;
+          records.push({ char:current, mode, mistakes:d.totalMistakes, date:new Date().toISOString() });
+          let saved = true; try { localStorage.setItem(storageKey, JSON.stringify(records)); } catch { saved = false; }
+          renderRecords(); $('status').textContent = `完成！${d.totalMistakes === 0 ? '每一筆都寫對了' : `修正 ${d.totalMistakes} 次`}${saved ? '' : '（本次紀錄未能儲存）'}`;
+        }
+      });
+    }
+    async function advance() {
+      if (!loaded || busy) return;
+      if (stroke >= data.strokes.length) build();
+      const version = token, active = writer;
+      busy = true; controls(); $('status').textContent = `第 ${stroke + 1} 筆／共 ${data.strokes.length} 筆`;
+      await active.animateStroke(stroke);
+      if (version !== token) return;
+      stroke++; busy = false; controls();
+    }
+    async function play() {
+      if (!loaded || busy) return;
+      token++; build();
+      if (mode !== 'watch') { startPractice(); return; }
+      const version = token;
+      for (let i = 0; i < data.strokes.length; i++) {
+        if (version !== token) return;
+        await advance();
+        if (version !== token) return;
+        busy = true; controls();
+        await new Promise(resolve => setTimeout(resolve, 350 / Number($('speed').value)));
+        if (version !== token) return;
+        busy = false;
+      }
+      controls(); $('status').textContent = `完成，共 ${data.strokes.length} 筆`;
+    }
+    async function load(char) {
+      const version = ++token;
+      if (writer) { writer.cancelQuiz(); writer.pauseAnimation(); }
+      current = char; loaded = false; busy = false; data = null; controls(); $('writer').replaceChildren(); renderCharacters();
+      const item = info(); $('query').value = char;
+      const phon = item?.zhuyin || '', tone = phon.match(/[ˊˇˋ˙]/)?.[0] || '';
+      $('symbols').replaceChildren(...[...phon.replace(/[ˊˇˋ˙]/g,'')].map(s => { const span = document.createElement('span'); span.textContent = s; return span; }));
+      $('tone').textContent = tone; $('bpmf').classList.toggle('neutral', tone === '˙');
+      $('meta').textContent = item ? `${item.book} L${item.lesson}〈${item.title}〉 · 部首 ${item.radical}` : '課次資料尚未收錄';
+      $('status').textContent = '載入筆順中…';
+      try {
+        if (!window.HanziWriter) throw new Error('library');
+        let result = bundledStrokeData[char] || cache.get(char);
+        if (!result) {
+          const response = await fetch(`https://raw.githubusercontent.com/g0v/zh-stroke-data/master/json/${char.codePointAt(0).toString(16)}.json`, { signal:AbortSignal.timeout(15000) });
+          if (!response.ok) throw new Error('data');
+          result = convertMoeStrokes(await response.json(), char);
+          if (!result.strokes?.length || result.strokes.length !== result.medians?.length) throw new Error('data');
+          cache.set(char,result);
+        }
+        if (version !== token) return;
+        data = result; loaded = true; build();
+        $('status').textContent = `共 ${data.strokes.length} 筆`;
+        if (mode === 'watch') await play(); else startPractice();
+      } catch { if (version === token) { loaded = false; controls(); $('status').textContent = '無法載入此字筆順，請連線後重新查字。'; } }
+    }
+    $('search').onsubmit = e => { e.preventDefault(); const char = [...$('query').value].find(c => /\p{Script=Han}/u.test(c)); if (char) load(char); else $('status').textContent = '請輸入一個國字'; };
+    $('book').onchange = renderLessons;
+    $('lesson').onchange = () => load(selectedLesson().words[0][0]);
+    $('replay').onclick = play; $('step').onclick = advance;
+    $('next').onclick = () => { const words = selectedLesson().words; const i = words.findIndex(w => w[0] === current); load(words[(i + 1) % words.length][0]); };
+    document.querySelectorAll('[data-mode]').forEach(b => { b.onclick = () => {
+      mode = b.dataset.mode; $('outline').checked = mode !== 'practice';
+      document.querySelectorAll('[data-mode]').forEach(x => { x.classList.toggle('active',x === b); x.setAttribute('aria-pressed',String(x === b)); });
+      $('replay').querySelector('span').textContent = mode === 'watch' ? '重播' : '重寫'; load(current);
+    }; });
+    $('speed').onchange = () => load(current); $('outline').onchange = () => load(current);
+    new ResizeObserver(() => { if (writer && loaded) { const size = $('writer').clientWidth; writer.updateDimensions({ width:size, height:size, padding:22 }); } }).observe($('writer'));
+    if (window.lucide) lucide.createIcons(); renderRecords(); renderLessons();
+  });
+</script>
+</body>
+</html>
