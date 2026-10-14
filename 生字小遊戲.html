@@ -771,6 +771,7 @@
     </section>
   </main>
 
+  <script src="second-grade-lessons.js"></script>
   <script>
     const lessons = [
       { book:"一下", lesson:1, title:"看", words:[["先","ㄒㄧㄢ"],["看","ㄎㄢˋ"],["空","ㄎㄨㄥ"],["雲","ㄩㄣˊ"],["鳥","ㄋㄧㄠˇ"],["草","ㄘㄠˇ"],["蟲","ㄔㄨㄥˊ"],["水","ㄕㄨㄟˇ"],["再","ㄗㄞˋ"],["玩","ㄨㄢˊ"]] },
@@ -790,6 +791,7 @@
       { book:"二上", lesson:3, title:"走過小巷", words:[["巷","ㄒㄧㄤˋ"],["叔","ㄕㄨˊ"],["牆","ㄑㄧㄤˊ"],["貓","ㄇㄠ"],["屋","ㄨ"],["捧","ㄆㄥˇ"],["蝴","ㄏㄨˊ"],["蝶","ㄉㄧㄝˊ"],["忙","ㄇㄤˊ"],["娶","ㄑㄩˇ"],["娘","ㄋㄧㄤˊ"],["黃","ㄏㄨㄤˊ"],["筆","ㄅㄧˇ"],["打","ㄉㄚˇ"],["扮","ㄅㄢˋ"],["模","ㄇㄛˊ"],["樣","ㄧㄤˋ"],["美","ㄇㄟˇ"],["麗","ㄌㄧˋ"],["越","ㄩㄝˋ"]] }
     ];
 
+    lessons.push(...newSecondGradeLessons.map(l => ({ ...l, words:l.words.map(w => w.slice(0,2)) })));
     const STORAGE_KEY = "kangxuan-character-game-v1";
     const DAILY_KEY = "kangxuan-character-game-daily-v1";
     const DAILY_LIMIT = 10;
@@ -810,6 +812,7 @@
       餐:"早餐", 全:"全部", 蛋:"雞蛋", 煎:"煎蛋", 圓:"圓形", 番:"番茄", 茄:"番茄", 切:"切片", 輪:"一輪", 保:"保持", 城:"城堡", 方:"方形", 中:"中間", 吐:"吐司", 夾:"夾心", 司:"吐司", 接:"接著", 醬:"果醬", 畫:"畫畫", 臉:"笑臉",
       巷:"小巷", 叔:"叔叔", 牆:"牆上", 貓:"小貓", 屋:"屋子", 捧:"捧花", 蝴:"蝴蝶", 蝶:"蝴蝶", 忙:"幫忙", 娶:"娶親", 娘:"新娘", 黃:"黃花", 筆:"毛筆", 打:"打扮", 扮:"打扮", 模:"模樣", 樣:"模樣", 美:"美麗", 麗:"美麗", 越:"越過"
     };
+    Object.entries(newSecondGradeTerms).forEach(([char, term]) => { if (!termHints[char]) termHints[char] = term; });
     const commonTerms = new Set([
       ...Object.values(termHints),
       "小看", "小狗", "小花", "小草", "小手", "小孩", "小朋友", "小學生",
@@ -922,7 +925,7 @@
     function zhuyinHtml(value, blank = false) {
       if (blank) return `<span class="bpmf blank">？</span>`;
       const parts = splitZhuyin(value);
-      return `<span class="bpmf"><span class="bpmf-main">${escapeHtml(parts.symbols)}</span><span class="bpmf-tone">${escapeHtml(parts.tone)}</span></span>`;
+      return `<span class="bpmf"><span class="bpmf-main">${parts.tone === "˙" ? "˙" : ""}${escapeHtml(parts.symbols)}</span><span class="bpmf-tone">${parts.tone === "˙" ? "" : escapeHtml(parts.tone)}</span></span>`;
     }
 
     function setZhuyin(target, value, blank = false) {

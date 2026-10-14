@@ -471,7 +471,7 @@
         <h1>生字查詢</h1>
         <div class="subtitle">輸入一個或多個國字，查詢康軒已整理生字是否學過。</div>
       </div>
-      <div class="scope">康軒一下 L1-L12<br>二上 L1-L3</div>
+      <div class="scope">康軒一下 L1-L12<br>二上 L1-L6</div>
     </header>
 
     <section class="search-panel">
@@ -482,7 +482,7 @@
       </div>
       <div id="summary" class="summary">請輸入要查的生字。</div>
       <section id="results" class="results"></section>
-      <div class="hint">可一次輸入多個字；重複字會自動合併。二上內容會陸續加入，目前先收錄 L1-L3。</div>
+      <div class="hint">可一次輸入多個字；重複字會自動合併。二上目前收錄 L1-L6。</div>
       <div class="chips" aria-label="常混字快速查詢">
         <button class="chip" type="button" data-query="生升">生 / 升</button>
         <button class="chip" type="button" data-query="珍珠">珍 / 珠</button>
@@ -492,12 +492,16 @@
         <button class="chip" type="button" data-query="年希望">二上 L1</button>
         <button class="chip" type="button" data-query="餐蛋煎">二上 L2</button>
         <button class="chip" type="button" data-query="巷牆貓">二上 L3</button>
+        <button class="chip" type="button" data-query="運動舞">二上 L4</button>
+        <button class="chip" type="button" data-query="竹籃鄉">二上 L5</button>
+        <button class="chip" type="button" data-query="鎮餅節">二上 L6</button>
       </div>
     </section>
 
     <section id="lessonList" class="lesson-list"></section>
   </main>
 
+  <script src="second-grade-lessons.js"></script>
   <script>
     const lessons = [
       { lesson: 1, title: "看", words: [["先","ㄒㄧㄢ","儿",6],["看","ㄎㄢˋ","目",9],["空","ㄎㄨㄥ","穴",8],["雲","ㄩㄣˊ","雨",12],["鳥","ㄋㄧㄠˇ","鳥",11],["草","ㄘㄠˇ","艸",10],["蟲","ㄔㄨㄥˊ","虫",18],["水","ㄕㄨㄟˇ","水",4],["再","ㄗㄞˋ","冂",6],["玩","ㄨㄢˊ","玉",8]] },
@@ -517,6 +521,7 @@
       { book: "二上", lesson: 3, title: "走過小巷", words: [["巷","ㄒㄧㄤˋ","己",9],["叔","ㄕㄨˊ","又",8],["牆","ㄑㄧㄤˊ","土",17],["貓","ㄇㄠ","犬",15],["屋","ㄨ","尸",9],["捧","ㄆㄥˇ","手",11],["蝴","ㄏㄨˊ","虫",15],["蝶","ㄉㄧㄝˊ","虫",15],["忙","ㄇㄤˊ","心",6],["娶","ㄑㄩˇ","女",11],["娘","ㄋㄧㄤˊ","女",10],["黃","ㄏㄨㄤˊ","黃",12],["筆","ㄅㄧˇ","竹",12],["打","ㄉㄚˇ","手",5],["扮","ㄅㄢˋ","手",7],["模","ㄇㄛˊ","木",15],["樣","ㄧㄤˋ","木",15],["美","ㄇㄟˇ","羊",9],["麗","ㄌㄧˋ","鹿",19],["越","ㄩㄝˋ","走",12]] }
     ];
 
+    lessons.push(...newSecondGradeLessons);
     const termHints = {
       先:"先看", 看:"看見", 空:"天空", 雲:"白雲", 鳥:"小鳥", 草:"青草", 蟲:"小蟲", 水:"喝水", 再:"再見", 玩:"玩水",
       園:"花園", 聞:"聞香", 香:"花香", 正:"正在", 唱:"唱歌", 聽:"聽見", 沒:"沒有", 找:"找到", 芽:"小芽", 身:"身上",
@@ -535,6 +540,7 @@
       巷:"小巷", 叔:"叔叔", 牆:"牆上", 貓:"小貓", 屋:"屋子", 捧:"捧花", 蝴:"蝴蝶", 蝶:"蝴蝶", 忙:"幫忙", 娶:"娶親", 娘:"新娘", 黃:"黃花", 筆:"毛筆", 打:"打扮", 扮:"打扮", 模:"模樣", 樣:"模樣", 美:"美麗", 麗:"美麗", 越:"越過"
     };
 
+    Object.entries(newSecondGradeTerms).forEach(([char, term]) => { if (!termHints[char]) termHints[char] = term; });
     const confusionHints = {
       生:["升"], 升:["生"], 珍:["珠"], 珠:["珍"], 游:["遊"], 遊:["游"],
       清:["情","晴"], 情:["清","晴"], 晴:["清","情"], 日:["目"], 目:["日"],
@@ -592,8 +598,8 @@
       const parts = splitZhuyin(value);
       return `
         <div class="bpmf">
-          <span class="bpmf-main">${parts.symbols}</span>
-          <span class="bpmf-tone">${parts.tone}</span>
+          <span class="bpmf-main">${parts.tone === "˙" ? "˙" : ""}${parts.symbols}</span>
+          <span class="bpmf-tone">${parts.tone === "˙" ? "" : parts.tone}</span>
         </div>
       `;
     }
