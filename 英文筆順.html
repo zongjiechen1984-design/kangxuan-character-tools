@@ -5,9 +5,12 @@
 <title>英文大小寫筆順</title>
 <style>
 #penTip[hidden]{display:none}
+.board #grader svg{pointer-events:auto}
+#grader{display:none;position:absolute;inset:0;touch-action:none}.writing #grader{display:block}#writingCanvas{pointer-events:none}.hint{fill:none;stroke:#d97636;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.55}
 *{box-sizing:border-box}body{margin:0;background:#f5f8f7;color:#203236;font-family:"Microsoft JhengHei",system-ui,sans-serif}main{max-width:980px;margin:auto;padding:20px 16px max(24px,env(safe-area-inset-bottom))}header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:2px solid #2f675f;padding-bottom:16px}h1{font-size:26px;margin:0}a{color:#2f675f}button,select{font:inherit;min-height:46px;border:1px solid #b7c9c5;border-radius:6px;background:white;color:inherit;padding:10px 14px}button{cursor:pointer;font-weight:700;touch-action:manipulation}button:hover{background:#edf5f2}button.active,button.primary{background:#2f675f;color:white;border-color:#2f675f}button:disabled{opacity:.4;cursor:default}:focus-visible{outline:3px solid #c77532;outline-offset:3px}.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(230px,1fr);gap:28px;margin-top:22px}.segmented{display:flex;gap:8px;margin-bottom:16px}.segmented button{flex:1}.title{display:flex;align-items:center;justify-content:space-between;margin:12px 0}.letter{font-family:Arial,sans-serif;font-size:36px;font-weight:700}.board{position:relative;aspect-ratio:5/4;border:1px solid #b7c9c5;background:#fff;overflow:hidden;touch-action:none}.board svg,.board canvas{position:absolute;inset:0;width:100%;height:100%}.board svg{pointer-events:none}.guide{stroke:#94b5c6;stroke-width:1;vector-effect:non-scaling-stroke}.middle{stroke-dasharray:7 5}.baseline{stroke:#d96a6a;stroke-width:1.5}.outline{fill:none;stroke:#dce5e1;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.demo{fill:none;stroke:#203236;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.start{fill:#d97636;stroke:white;stroke-width:1}.controls{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.controls button{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;white-space:nowrap}svg.lucide{width:20px;height:20px}.status{min-height:28px;text-align:center;font-weight:700;margin-top:14px}.settings{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:16px}.settings label{display:flex;align-items:center;gap:6px}.alphabet{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.alphabet button{font:26px Arial,sans-serif;padding:8px 0;aspect-ratio:1}.navigation{display:flex;gap:8px;margin-top:16px}.navigation button{flex:1}.note{margin-top:22px;border-top:1px solid #cbd6d2;padding-top:14px;font-size:13px;color:#5d6a70;line-height:1.7}#writingCanvas{display:none}.writing #writingCanvas{display:block}#penTip{fill:#d97636;stroke:white;stroke-width:1.5}@media(max-width:700px){.layout{grid-template-columns:1fr;gap:24px}h1{font-size:22px}.controls button{padding:10px 8px}.alphabet{grid-template-columns:repeat(7,minmax(0,1fr))}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5.0/dist/hanzi-writer.min.js" defer></script>
 </head>
 <body><main>
 <header><h1>英文大小寫筆順</h1><a href="index.html">工具首頁</a></header>
@@ -17,8 +20,8 @@
 <div class="board" id="board">
 <svg id="letterSvg" viewBox="0 0 300 240" aria-label="字母四線練習格">
 <line class="guide" x1="0" y1="40" x2="300" y2="40"/><line class="guide middle" x1="0" y1="100" x2="300" y2="100"/><line class="guide baseline" x1="0" y1="160" x2="300" y2="160"/><line class="guide" x1="0" y1="220" x2="300" y2="220"/>
-<g id="outlines" class="outline"></g><g id="demo" class="demo"></g><g id="starts"></g><circle id="penTip" r="5" hidden/>
-</svg><canvas id="writingCanvas" width="900" height="720" aria-label="英文手寫區"></canvas></div>
+<g id="outlines" class="outline"></g><g id="demo" class="demo"></g><g id="hint" class="hint"></g><g id="starts"></g><circle id="penTip" r="5" hidden/>
+</svg><canvas id="writingCanvas" width="900" height="720" aria-label="英文手寫區"></canvas><div id="grader" aria-label="逐筆書寫區"></div></div>
 <div id="status" class="status" role="status" aria-live="polite"></div>
 <div class="controls"><button id="play" class="primary" title="重播字母筆順"><i data-lucide="rotate-ccw"></i><span>重播</span></button><button id="step" title="下一筆"><i data-lucide="skip-forward"></i><span>下一筆</span></button><button id="undo" title="復原上一筆"><i data-lucide="undo-2"></i><span>復原</span></button><button id="clear" title="清除手寫筆跡"><i data-lucide="eraser"></i><span>清除</span></button></div>
 <div class="settings"><label>速度 <select id="speed"><option value="0.6">慢</option><option value="1" selected>標準</option><option value="1.8">快</option></select></label><label><input type="checkbox" id="showStarts" checked>起筆點</label></div>
@@ -26,7 +29,7 @@
 <div class="segmented" aria-label="大小寫"><button data-case="upper" class="active" aria-pressed="true">大寫 ABC</button><button data-case="lower" aria-pressed="false">小寫 abc</button></div>
 <div class="alphabet" id="alphabet"></div><div class="navigation"><button id="previous">上一字母</button><button id="next">下一字母</button></div>
 </section></div>
-<footer class="note">一般手寫印刷體（a、g 採單層字形）；各教材的筆順可能略有差異，可依學校示範為準。練寫保留原始筆跡，本頁不自動判分。</footer>
+<footer class="note">一般手寫印刷體（a、g 採單層字形）；各教材的筆順可能略有差異，可依學校示範為準。</footer>
 </main>
 <script>
 // A consistent manuscript model, on four lines: top 40, middle 100, baseline 160, descender 220.
@@ -89,15 +92,53 @@ z:['M114 100 L186 100 L114 160 L186 160']}
 const $=id=>document.getElementById(id),ns='http://www.w3.org/2000/svg';
 let letter='A',letterCase='upper',mode='watch',generation=0,frame=0,strokeIndex=0,busy=false;
 let ink=[],activeStroke=null,pointerId=null;
+let grader=null,practiceVersion=0,practiceReady=false;
 const canvas=$('writingCanvas'),ctx=canvas.getContext('2d');
 function path(d,group){const p=document.createElementNS(ns,'path');p.setAttribute('d',d);group.append(p);return p;}
 function updateControls(){ $('play').disabled=mode!=='watch';$('step').disabled=mode!=='watch'||busy;$('undo').disabled=mode==='watch'||!ink.length;$('clear').disabled=mode==='watch'||(!ink.length&&!activeStroke); }
 function cancel(){generation++;cancelAnimationFrame(frame);busy=false;$('penTip').setAttribute('hidden','');}
 function redraw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#266fbd';ctx.lineWidth=4;ctx.lineCap='round';ctx.lineJoin='round';ctx.save();ctx.scale(canvas.width/300,canvas.height/240);for(const points of [...ink,...(activeStroke?[activeStroke]:[])]){if(!points.length)continue;ctx.beginPath();ctx.moveTo(...points[0]);if(points.length===1)ctx.lineTo(points[0][0]+.1,points[0][1]);else points.slice(1).forEach(p=>ctx.lineTo(...p));ctx.stroke();}ctx.restore();updateControls();}
 function resetInk(){if(pointerId!==null&&canvas.hasPointerCapture(pointerId))canvas.releasePointerCapture(pointerId);pointerId=null;activeStroke=null;ink=[];redraw();}
+function updatePractice(){
+ $('hint').replaceChildren();
+ const total=alphabetStrokes[letterCase][letter].length;
+ $('status').textContent=ink.length===total?'完成！每一筆都寫對了':`請寫第 ${ink.length+1} 筆／共 ${total} 筆`;
+ if(mode==='trace'&&ink.length<total)path(alphabetStrokes[letterCase][letter][ink.length],$('hint'));
+ starts();
+}
+function startGrading(){
+ const version=++practiceVersion;
+ if(grader)grader.cancelQuiz();
+ $('grader').replaceChildren();practiceReady=false;
+ if(mode==='watch')return;
+ if(!window.HanziWriter){$('status').textContent='無法載入書寫檢查，請連線後重新整理。';return;}
+ const factor=1024/240;
+ const medians=[...$('outlines').children].map(p=>{
+  const length=p.getTotalLength(),steps=Math.max(1,Math.ceil(length/4));
+  return Array.from({length:steps+1},(_,i)=>{const pt=p.getPointAtLength(length*i/steps);return[(pt.x-30)*factor,900-pt.y*factor];});
+ });
+ // The matcher uses medians; standard filled glyphs stay transparent to retain the student's ink.
+ const data={medians,strokes:medians.map(points=>points.map(([x,y],i)=>`${i?'L':'M'}${x} ${y}`).join(' ')+' Z')};
+ const box=$('grader').getBoundingClientRect();
+ grader=HanziWriter.create('grader',letter,{width:box.width,height:box.height,padding:0,showCharacter:false,showOutline:false,strokeColor:'rgba(0,0,0,0)',drawingColor:'#266fbd',drawingWidth:4*box.width/300,drawingFadeDuration:0,strokeFadeDuration:0,charDataLoader:()=>data});
+ updatePractice();
+ if(ink.length===medians.length)return;
+ grader.quiz({quizStartStrokeNum:ink.length,showHintAfterMisses:false,highlightOnComplete:false,acceptBackwardsStrokes:false,leniency:.8,
+  onCorrectStroke:d=>{
+   if(version!==practiceVersion)return;
+   const points=d.drawnPath.points,expected=medians[d.strokeNum];
+   const distance=(p,q)=>Math.hypot(p.x-q[0],p.y-q[1]);
+   if(distance(points[0],expected[0])>18*factor||distance(points.at(-1),expected.at(-1))>18*factor){startGrading();$('status').textContent=`起筆或收筆位置不對，請重寫第 ${ink.length+1} 筆`;return;}
+   ink.push(points.map(p=>[p.x/factor+30,(900-p.y)/factor]));redraw();updatePractice();
+  },
+  onMistake:()=>{if(version===practiceVersion)$('status').textContent=`位置或方向不對，請重寫第 ${ink.length+1} 筆`;},
+  onComplete:()=>{if(version===practiceVersion)updatePractice();}
+ });
+ practiceReady=true;
+}
 function renderAlphabet(){ $('alphabet').replaceChildren();for(const upper of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'){const ch=letterCase==='upper'?upper:upper.toLowerCase();const b=document.createElement('button');b.textContent=ch;b.classList.toggle('active',ch===letter);b.setAttribute('aria-pressed',String(ch===letter));b.onclick=()=>select(ch);$('alphabet').append(b);} }
 function starts(){ $('starts').replaceChildren();if(!$('showStarts').checked||mode==='write')return;const groups=new Map();[...$('outlines').children].forEach((p,i)=>{const pt=p.getPointAtLength(0),key=`${Math.round(pt.x)},${Math.round(pt.y)}`;if(!groups.has(key))groups.set(key,{pt,numbers:[]});groups.get(key).numbers.push(i+1);});for(const {pt,numbers} of groups.values()){const c=document.createElementNS(ns,'circle');c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y);c.setAttribute('r',4);c.setAttribute('class','start');const t=document.createElementNS(ns,'text');t.setAttribute('x',pt.x+7);t.setAttribute('y',pt.y-7);t.setAttribute('font-size',10);t.setAttribute('fill','#a75219');t.textContent=numbers.join('/');$('starts').append(c,t);} }
-function select(ch){cancel();letter=ch;strokeIndex=0;resetInk();$('letterLabel').textContent=ch.toUpperCase()+' '+ch.toLowerCase();$('strokeCount').textContent=`${alphabetStrokes[letterCase][ch].length} 筆`;$('demo').replaceChildren();$('outlines').replaceChildren();alphabetStrokes[letterCase][ch].forEach(d=>path(d,$('outlines')));$('outlines').style.visibility=mode==='write'?'hidden':'visible';$('board').classList.toggle('writing',mode!=='watch');$('status').textContent=mode==='watch'?'準備播放':mode==='trace'?'描寫':'自己寫';starts();renderAlphabet();updateControls();if(mode==='watch')play();}
+function select(ch){cancel();letter=ch;strokeIndex=0;resetInk();$('letterLabel').textContent=ch.toUpperCase()+' '+ch.toLowerCase();$('strokeCount').textContent=`${alphabetStrokes[letterCase][ch].length} 筆`;$('demo').replaceChildren();$('hint').replaceChildren();$('outlines').replaceChildren();alphabetStrokes[letterCase][ch].forEach(d=>path(d,$('outlines')));$('outlines').style.visibility=mode==='write'?'hidden':'visible';$('board').classList.toggle('writing',mode!=='watch');$('status').textContent=mode==='watch'?'準備播放':mode==='trace'?'描寫':'自己寫';starts();renderAlphabet();updateControls();startGrading();if(mode==='watch')play();}
 function animateStroke(index,version,done){const p=path(alphabetStrokes[letterCase][letter][index],$('demo')),length=p.getTotalLength();p.style.strokeDasharray=length;p.style.strokeDashoffset=length;const duration=Math.max(350,length*9)/Number($('speed').value);let start;busy=true;updateControls();$('status').textContent=`第 ${index+1} 筆／共 ${alphabetStrokes[letterCase][letter].length} 筆`;$('penTip').removeAttribute('hidden');function tick(now){if(version!==generation)return;if(start===undefined)start=now;const progress=Math.min(1,(now-start)/duration);p.style.strokeDashoffset=length*(1-progress);const pt=p.getPointAtLength(length*progress);$('penTip').setAttribute('cx',pt.x);$('penTip').setAttribute('cy',pt.y);if(progress<1)frame=requestAnimationFrame(tick);else{strokeIndex=index+1;busy=false;$('penTip').setAttribute('hidden','');updateControls();done();}}frame=requestAnimationFrame(tick);}
 function play(){if(mode!=='watch')return;cancel();const version=generation;strokeIndex=0;$('demo').replaceChildren();function next(){if(version!==generation)return;if(strokeIndex>=alphabetStrokes[letterCase][letter].length){$('status').textContent='播放完成';updateControls();return;}animateStroke(strokeIndex,version,()=>{busy=true;updateControls();setTimeout(()=>{if(version!==generation)return;busy=false;next();},350);});}next();}
 $('play').onclick=play;$('step').onclick=()=>{if(busy||mode!=='watch')return;cancel();if(strokeIndex>=alphabetStrokes[letterCase][letter].length){strokeIndex=0;$('demo').replaceChildren();}animateStroke(strokeIndex,generation,()=>{});};
@@ -106,10 +147,12 @@ document.querySelectorAll('[data-case]').forEach(b=>b.onclick=()=>{letterCase=b.
 function move(delta){const i=letter.toUpperCase().charCodeAt(0)-65;const ch=String.fromCharCode(65+(i+delta+26)%26);select(letterCase==='upper'?ch:ch.toLowerCase());}
 $('previous').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('speed').onchange=()=>{if(mode==='watch')play();};$('showStarts').onchange=starts;
 function point(e){const r=canvas.getBoundingClientRect();return[(e.clientX-r.left)*300/r.width,(e.clientY-r.top)*240/r.height];}
-canvas.onpointerdown=e=>{if(mode==='watch'||pointerId!==null||e.button!==0)return;e.preventDefault();pointerId=e.pointerId;canvas.setPointerCapture(pointerId);activeStroke=[point(e)];redraw();};
-canvas.onpointermove=e=>{if(e.pointerId!==pointerId||!activeStroke)return;e.preventDefault();const events=e.getCoalescedEvents?.();for(const p of events?.length?events:[e])activeStroke.push(point(p));redraw();};
-canvas.onpointerup=e=>{if(e.pointerId!==pointerId||!activeStroke)return;activeStroke.push(point(e));ink.push(activeStroke);activeStroke=null;pointerId=null;canvas.releasePointerCapture(e.pointerId);redraw();$('status').textContent=`已寫 ${ink.length} 筆`;};
-canvas.onpointercancel=canvas.onlostpointercapture=e=>{if(e.pointerId===pointerId){pointerId=null;activeStroke=null;redraw();}};
-$('undo').onclick=()=>{ink.pop();redraw();$('status').textContent=`已寫 ${ink.length} 筆`;};$('clear').onclick=()=>{resetInk();$('status').textContent=mode==='trace'?'描寫':'自己寫';};
+// Dots accept a tap near the target; the stroke matcher handles all longer strokes.
+$('grader').onpointerdown=e=>{const p=$('outlines').children[ink.length];if(!practiceReady||!p||p.getTotalLength()>5||pointerId!==null||e.button!==0)return;e.preventDefault();grader.cancelQuiz();pointerId=e.pointerId;$('grader').setPointerCapture(pointerId);activeStroke=[point(e)];redraw();};
+$('grader').onpointermove=e=>{if(e.pointerId!==pointerId||!activeStroke)return;e.preventDefault();activeStroke.push(point(e));redraw();};
+$('grader').onpointerup=e=>{if(e.pointerId!==pointerId||!activeStroke)return;e.preventDefault();const p=$('outlines').children[ink.length],target=p.getPointAtLength(0);activeStroke.push(point(e));const good=activeStroke.every(([x,y])=>Math.hypot(x-target.x,y-target.y)<=10);if(good)ink.push(activeStroke);activeStroke=null;pointerId=null;$('grader').releasePointerCapture(e.pointerId);redraw();startGrading();if(!good)$('status').textContent=`位置不對，請重寫第 ${ink.length+1} 筆`;};
+$('grader').onpointercancel=$('grader').onlostpointercapture=e=>{if(e.pointerId===pointerId){pointerId=null;activeStroke=null;redraw();startGrading();}};
+$('undo').onclick=()=>{ink.pop();redraw();startGrading();};$('clear').onclick=()=>{resetInk();startGrading();};
+new ResizeObserver(()=>{if(grader&&mode!=='watch'){const box=$('grader').getBoundingClientRect();grader.updateDimensions({width:box.width,height:box.height,padding:0});grader.updateColor('drawingColor','#266fbd');}}).observe($('board'));
 window.addEventListener('DOMContentLoaded',()=>{if(window.lucide)lucide.createIcons();select('A');});
 </script></body></html>
