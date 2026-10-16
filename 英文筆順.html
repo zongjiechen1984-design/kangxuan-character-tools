@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>英文大小寫筆順</title>
+<style>
+#penTip[hidden]{display:none}
+*{box-sizing:border-box}body{margin:0;background:#f5f8f7;color:#203236;font-family:"Microsoft JhengHei",system-ui,sans-serif}main{max-width:980px;margin:auto;padding:20px 16px max(24px,env(safe-area-inset-bottom))}header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:2px solid #2f675f;padding-bottom:16px}h1{font-size:26px;margin:0}a{color:#2f675f}button,select{font:inherit;min-height:46px;border:1px solid #b7c9c5;border-radius:6px;background:white;color:inherit;padding:10px 14px}button{cursor:pointer;font-weight:700;touch-action:manipulation}button:hover{background:#edf5f2}button.active,button.primary{background:#2f675f;color:white;border-color:#2f675f}button:disabled{opacity:.4;cursor:default}:focus-visible{outline:3px solid #c77532;outline-offset:3px}.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(230px,1fr);gap:28px;margin-top:22px}.segmented{display:flex;gap:8px;margin-bottom:16px}.segmented button{flex:1}.title{display:flex;align-items:center;justify-content:space-between;margin:12px 0}.letter{font-family:Arial,sans-serif;font-size:36px;font-weight:700}.board{position:relative;aspect-ratio:5/4;border:1px solid #b7c9c5;background:#fff;overflow:hidden;touch-action:none}.board svg,.board canvas{position:absolute;inset:0;width:100%;height:100%}.board svg{pointer-events:none}.guide{stroke:#94b5c6;stroke-width:1;vector-effect:non-scaling-stroke}.middle{stroke-dasharray:7 5}.baseline{stroke:#d96a6a;stroke-width:1.5}.outline{fill:none;stroke:#dce5e1;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.demo{fill:none;stroke:#203236;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.start{fill:#d97636;stroke:white;stroke-width:1}.controls{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.controls button{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;white-space:nowrap}svg.lucide{width:20px;height:20px}.status{min-height:28px;text-align:center;font-weight:700;margin-top:14px}.settings{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:16px}.settings label{display:flex;align-items:center;gap:6px}.alphabet{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.alphabet button{font:26px Arial,sans-serif;padding:8px 0;aspect-ratio:1}.navigation{display:flex;gap:8px;margin-top:16px}.navigation button{flex:1}.note{margin-top:22px;border-top:1px solid #cbd6d2;padding-top:14px;font-size:13px;color:#5d6a70;line-height:1.7}#writingCanvas{display:none}.writing #writingCanvas{display:block}#penTip{fill:#d97636;stroke:white;stroke-width:1.5}@media(max-width:700px){.layout{grid-template-columns:1fr;gap:24px}h1{font-size:22px}.controls button{padding:10px 8px}.alphabet{grid-template-columns:repeat(7,minmax(0,1fr))}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+</head>
+<body><main>
+<header><h1>英文大小寫筆順</h1><a href="index.html">工具首頁</a></header>
+<div class="layout"><section aria-label="字母筆順與練寫">
+<div class="segmented" aria-label="練習模式"><button data-mode="watch" class="active" aria-pressed="true">看筆順</button><button data-mode="trace" aria-pressed="false">描寫</button><button data-mode="write" aria-pressed="false">自己寫</button></div>
+<div class="title"><span class="letter" id="letterLabel">A a</span><span id="strokeCount"></span></div>
+<div class="board" id="board">
+<svg id="letterSvg" viewBox="0 0 300 240" aria-label="字母四線練習格">
+<line class="guide" x1="0" y1="40" x2="300" y2="40"/><line class="guide middle" x1="0" y1="100" x2="300" y2="100"/><line class="guide baseline" x1="0" y1="160" x2="300" y2="160"/><line class="guide" x1="0" y1="220" x2="300" y2="220"/>
+<g id="outlines" class="outline"></g><g id="demo" class="demo"></g><g id="starts"></g><circle id="penTip" r="5" hidden/>
+</svg><canvas id="writingCanvas" width="900" height="720" aria-label="英文手寫區"></canvas></div>
+<div id="status" class="status" role="status" aria-live="polite"></div>
+<div class="controls"><button id="play" class="primary" title="重播字母筆順"><i data-lucide="rotate-ccw"></i><span>重播</span></button><button id="step" title="下一筆"><i data-lucide="skip-forward"></i><span>下一筆</span></button><button id="undo" title="復原上一筆"><i data-lucide="undo-2"></i><span>復原</span></button><button id="clear" title="清除手寫筆跡"><i data-lucide="eraser"></i><span>清除</span></button></div>
+<div class="settings"><label>速度 <select id="speed"><option value="0.6">慢</option><option value="1" selected>標準</option><option value="1.8">快</option></select></label><label><input type="checkbox" id="showStarts" checked>起筆點</label></div>
+</section><section aria-label="選擇字母">
+<div class="segmented" aria-label="大小寫"><button data-case="upper" class="active" aria-pressed="true">大寫 ABC</button><button data-case="lower" aria-pressed="false">小寫 abc</button></div>
+<div class="alphabet" id="alphabet"></div><div class="navigation"><button id="previous">上一字母</button><button id="next">下一字母</button></div>
+</section></div>
+<footer class="note">一般手寫印刷體（a、g 採單層字形）；各教材的筆順可能略有差異，可依學校示範為準。練寫保留原始筆跡，本頁不自動判分。</footer>
+</main>
+<script>
+// A consistent manuscript model, on four lines: top 40, middle 100, baseline 160, descender 220.
+const alphabetStrokes = {
+upper:{
+A:['M150 40 L100 160','M150 40 L200 160','M119 115 L181 115'],
+B:['M110 40 L110 160','M110 40 L155 40 C210 40 210 100 155 100 L110 100','M110 100 L160 100 C216 100 216 160 160 160 L110 160'],
+C:['M200 57 C148 10 95 50 95 100 C95 150 148 190 200 143'],
+D:['M110 40 L110 160','M110 40 L145 40 C230 40 230 160 145 160 L110 160'],
+E:['M110 40 L110 160','M110 40 L195 40','M110 100 L180 100','M110 160 L195 160'],
+F:['M110 40 L110 160','M110 40 L195 40','M110 100 L180 100'],
+G:['M200 57 C148 10 95 50 95 100 C95 150 148 190 200 143 L200 105 L160 105'],
+H:['M105 40 L105 160','M195 40 L195 160','M105 100 L195 100'],
+I:['M150 40 L150 160','M112 40 L188 40','M112 160 L188 160'],
+J:['M190 40 L190 123 C190 175 110 175 110 130','M150 40 L210 40'],
+K:['M110 40 L110 160','M195 40 L110 105','M135 86 L200 160'],
+L:['M110 40 L110 160','M110 160 L195 160'],
+M:['M95 40 L95 160','M95 40 L150 130 L205 40','M205 40 L205 160'],
+N:['M105 40 L105 160','M105 40 L195 160','M195 40 L195 160'],
+O:['M150 40 C75 40 75 160 150 160 C225 160 225 40 150 40'],
+P:['M110 40 L110 160','M110 40 L155 40 C215 40 215 103 155 103 L110 103'],
+Q:['M150 40 C75 40 75 160 150 160 C225 160 225 40 150 40','M165 130 L207 174'],
+R:['M110 40 L110 160','M110 40 L155 40 C215 40 215 103 155 103 L110 103','M155 103 L205 160'],
+S:['M195 57 C155 16 100 45 108 78 C115 106 195 93 195 133 C195 171 130 170 105 145'],
+T:['M100 40 L200 40','M150 40 L150 160'],
+U:['M105 40 L105 118 C105 174 195 174 195 118 L195 40'],
+V:['M100 40 L150 160','M200 40 L150 160'],
+W:['M80 40 L112 160 L150 70 L188 160 L220 40'],
+X:['M100 40 L200 160','M200 40 L100 160'],
+Y:['M100 40 L150 100','M200 40 L150 100 L150 160'],
+Z:['M100 40 L200 40 L100 160 L200 160']},
+lower:{
+a:['M177 107 C138 83 113 108 113 132 C113 170 177 170 177 132 L177 100 L177 160'],
+b:['M117 40 L117 160 L117 119 C140 82 183 99 183 130 C183 166 138 170 117 145'],
+c:['M180 108 C141 83 113 108 113 130 C113 155 141 174 180 152'],
+d:['M178 107 C140 83 113 105 113 132 C113 170 178 170 178 132 L178 40 L178 160'],
+e:['M113 128 L181 128 C181 89 113 88 113 130 C113 163 150 173 182 151'],
+f:['M175 48 C150 25 130 49 130 75 L130 160','M108 100 L167 100'],
+g:['M178 107 C140 83 113 105 113 132 C113 170 178 170 178 132 L178 100 L178 190 C178 223 130 230 115 208'],
+h:['M115 40 L115 160 L115 122 C125 91 179 91 179 125 L179 160'],
+i:['M150 100 L150 160','M150 76 L150 78'],
+j:['M163 100 L163 193 C163 224 133 228 117 210','M163 76 L163 78'],
+k:['M118 40 L118 160','M180 100 L118 136 L182 160'],
+l:['M150 40 L150 160'],
+m:['M100 100 L100 160 L100 122 C110 91 150 93 150 124 L150 160 L150 122 C160 91 200 93 200 124 L200 160'],
+n:['M116 100 L116 160 L116 122 C128 91 182 91 182 125 L182 160'],
+o:['M150 100 C102 100 102 160 150 160 C198 160 198 100 150 100'],
+p:['M116 100 L116 220 L116 120 C138 83 183 99 183 130 C183 166 138 170 116 145'],
+q:['M178 107 C140 83 113 105 113 132 C113 170 178 170 178 132 L178 100 L178 220'],
+r:['M126 100 L126 160 L126 123 C138 100 160 95 180 106'],
+s:['M177 107 C145 86 115 104 121 119 C130 136 180 125 180 146 C180 166 138 166 118 153'],
+t:['M141 64 L141 141 C141 163 156 165 174 154','M116 100 L174 100'],
+u:['M116 100 L116 139 C116 169 175 169 178 135 L178 100 L178 160'],
+v:['M112 100 L150 160 L188 100'],
+w:['M90 100 L119 160 L150 105 L181 160 L210 100'],
+x:['M113 100 L187 160','M187 100 L113 160'],
+y:['M112 100 L150 160','M188 100 L125 220'],
+z:['M114 100 L186 100 L114 160 L186 160']}
+};
+const $=id=>document.getElementById(id),ns='http://www.w3.org/2000/svg';
+let letter='A',letterCase='upper',mode='watch',generation=0,frame=0,strokeIndex=0,busy=false;
+let ink=[],activeStroke=null,pointerId=null;
+const canvas=$('writingCanvas'),ctx=canvas.getContext('2d');
+function path(d,group){const p=document.createElementNS(ns,'path');p.setAttribute('d',d);group.append(p);return p;}
+function updateControls(){ $('play').disabled=mode!=='watch';$('step').disabled=mode!=='watch'||busy;$('undo').disabled=mode==='watch'||!ink.length;$('clear').disabled=mode==='watch'||(!ink.length&&!activeStroke); }
+function cancel(){generation++;cancelAnimationFrame(frame);busy=false;$('penTip').setAttribute('hidden','');}
+function redraw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#266fbd';ctx.lineWidth=4;ctx.lineCap='round';ctx.lineJoin='round';ctx.save();ctx.scale(canvas.width/300,canvas.height/240);for(const points of [...ink,...(activeStroke?[activeStroke]:[])]){if(!points.length)continue;ctx.beginPath();ctx.moveTo(...points[0]);if(points.length===1)ctx.lineTo(points[0][0]+.1,points[0][1]);else points.slice(1).forEach(p=>ctx.lineTo(...p));ctx.stroke();}ctx.restore();updateControls();}
+function resetInk(){if(pointerId!==null&&canvas.hasPointerCapture(pointerId))canvas.releasePointerCapture(pointerId);pointerId=null;activeStroke=null;ink=[];redraw();}
+function renderAlphabet(){ $('alphabet').replaceChildren();for(const upper of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'){const ch=letterCase==='upper'?upper:upper.toLowerCase();const b=document.createElement('button');b.textContent=ch;b.classList.toggle('active',ch===letter);b.setAttribute('aria-pressed',String(ch===letter));b.onclick=()=>select(ch);$('alphabet').append(b);} }
+function starts(){ $('starts').replaceChildren();if(!$('showStarts').checked||mode==='write')return;const groups=new Map();[...$('outlines').children].forEach((p,i)=>{const pt=p.getPointAtLength(0),key=`${Math.round(pt.x)},${Math.round(pt.y)}`;if(!groups.has(key))groups.set(key,{pt,numbers:[]});groups.get(key).numbers.push(i+1);});for(const {pt,numbers} of groups.values()){const c=document.createElementNS(ns,'circle');c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y);c.setAttribute('r',4);c.setAttribute('class','start');const t=document.createElementNS(ns,'text');t.setAttribute('x',pt.x+7);t.setAttribute('y',pt.y-7);t.setAttribute('font-size',10);t.setAttribute('fill','#a75219');t.textContent=numbers.join('/');$('starts').append(c,t);} }
+function select(ch){cancel();letter=ch;strokeIndex=0;resetInk();$('letterLabel').textContent=ch.toUpperCase()+' '+ch.toLowerCase();$('strokeCount').textContent=`${alphabetStrokes[letterCase][ch].length} 筆`;$('demo').replaceChildren();$('outlines').replaceChildren();alphabetStrokes[letterCase][ch].forEach(d=>path(d,$('outlines')));$('outlines').style.visibility=mode==='write'?'hidden':'visible';$('board').classList.toggle('writing',mode!=='watch');$('status').textContent=mode==='watch'?'準備播放':mode==='trace'?'描寫':'自己寫';starts();renderAlphabet();updateControls();if(mode==='watch')play();}
+function animateStroke(index,version,done){const p=path(alphabetStrokes[letterCase][letter][index],$('demo')),length=p.getTotalLength();p.style.strokeDasharray=length;p.style.strokeDashoffset=length;const duration=Math.max(350,length*9)/Number($('speed').value);let start;busy=true;updateControls();$('status').textContent=`第 ${index+1} 筆／共 ${alphabetStrokes[letterCase][letter].length} 筆`;$('penTip').removeAttribute('hidden');function tick(now){if(version!==generation)return;if(start===undefined)start=now;const progress=Math.min(1,(now-start)/duration);p.style.strokeDashoffset=length*(1-progress);const pt=p.getPointAtLength(length*progress);$('penTip').setAttribute('cx',pt.x);$('penTip').setAttribute('cy',pt.y);if(progress<1)frame=requestAnimationFrame(tick);else{strokeIndex=index+1;busy=false;$('penTip').setAttribute('hidden','');updateControls();done();}}frame=requestAnimationFrame(tick);}
+function play(){if(mode!=='watch')return;cancel();const version=generation;strokeIndex=0;$('demo').replaceChildren();function next(){if(version!==generation)return;if(strokeIndex>=alphabetStrokes[letterCase][letter].length){$('status').textContent='播放完成';updateControls();return;}animateStroke(strokeIndex,version,()=>{busy=true;updateControls();setTimeout(()=>{if(version!==generation)return;busy=false;next();},350);});}next();}
+$('play').onclick=play;$('step').onclick=()=>{if(busy||mode!=='watch')return;cancel();if(strokeIndex>=alphabetStrokes[letterCase][letter].length){strokeIndex=0;$('demo').replaceChildren();}animateStroke(strokeIndex,generation,()=>{});};
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});select(letter);});
+document.querySelectorAll('[data-case]').forEach(b=>b.onclick=()=>{letterCase=b.dataset.case;document.querySelectorAll('[data-case]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});select(letterCase==='upper'?letter.toUpperCase():letter.toLowerCase());});
+function move(delta){const i=letter.toUpperCase().charCodeAt(0)-65;const ch=String.fromCharCode(65+(i+delta+26)%26);select(letterCase==='upper'?ch:ch.toLowerCase());}
+$('previous').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('speed').onchange=()=>{if(mode==='watch')play();};$('showStarts').onchange=starts;
+function point(e){const r=canvas.getBoundingClientRect();return[(e.clientX-r.left)*300/r.width,(e.clientY-r.top)*240/r.height];}
+canvas.onpointerdown=e=>{if(mode==='watch'||pointerId!==null||e.button!==0)return;e.preventDefault();pointerId=e.pointerId;canvas.setPointerCapture(pointerId);activeStroke=[point(e)];redraw();};
+canvas.onpointermove=e=>{if(e.pointerId!==pointerId||!activeStroke)return;e.preventDefault();const events=e.getCoalescedEvents?.();for(const p of events?.length?events:[e])activeStroke.push(point(p));redraw();};
+canvas.onpointerup=e=>{if(e.pointerId!==pointerId||!activeStroke)return;activeStroke.push(point(e));ink.push(activeStroke);activeStroke=null;pointerId=null;canvas.releasePointerCapture(e.pointerId);redraw();$('status').textContent=`已寫 ${ink.length} 筆`;};
+canvas.onpointercancel=canvas.onlostpointercapture=e=>{if(e.pointerId===pointerId){pointerId=null;activeStroke=null;redraw();}};
+$('undo').onclick=()=>{ink.pop();redraw();$('status').textContent=`已寫 ${ink.length} 筆`;};$('clear').onclick=()=>{resetInk();$('status').textContent=mode==='trace'?'描寫':'自己寫';};
+window.addEventListener('DOMContentLoaded',()=>{if(window.lucide)lucide.createIcons();select('A');});
+</script></body></html>
