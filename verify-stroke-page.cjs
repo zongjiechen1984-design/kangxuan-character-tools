@@ -62,10 +62,19 @@ const { pathToFileURL } = require('node:url');
     await page.reload();
     await page.waitForFunction(() => document.querySelector('#recordSummary').textContent.includes('完成 1 次'));
     await page.locator('#book').selectOption('二上');
-    if (await page.locator('#lesson option').count() !== 6) throw Error('lesson list');
+    if (await page.locator('#lesson option').count() !== 7) throw Error('lesson list');
+    await page.route('**/zh-stroke-data/master/json/*.json', r => r.abort());
+    await page.locator('#lesson').selectOption('7');
+    await page.getByRole('button', { name: '描寫', exact: true }).click();
+    const lesson7 = await page.locator('#characters button').allTextContents();
+    if (lesson7.join('') !== '衣胖針簡單聰明臣敢東西直棒街滿眼哪思') throw Error('L7 character order');
+    for (const char of lesson7) {
+      await page.locator('#characters').getByRole('button', { name: char, exact: true }).click();
+      await page.waitForFunction(() => !document.querySelector('#replay').disabled);
+      if (!await page.locator('#writer svg path').count()) throw Error('missing L7 strokes for ' + char);
+    }
     await page.locator('#lesson').selectOption('3');
     if (await page.locator('#characters button').count() !== 20) throw Error('character list');
-    await page.route('**/zh-stroke-data/master/json/*.json', r => r.abort());
     await page.locator('#query').fill('龍'); await page.getByRole('button', { name:'查字', exact:true }).click();
     await page.waitForFunction(() => document.querySelector('#status').textContent.includes('無法載入'));
     if (!(await page.locator('#replay').isDisabled())) throw Error('failed load still enabled');
