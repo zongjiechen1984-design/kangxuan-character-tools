@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="康軒國語二上 L7～L12 圈詞隨機填空練習。">
+  <title>圈詞填空｜康軒國語二上</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172024;
+      --muted: #4e6562;
+      --paper: #f8faf7;
+      --accent: #2f675f;
+      --line: #c7d7d1;
+      --soft: #edf6f1;
+      --wrong: #912d22;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, #2f675f0d 1px, transparent 1px),
+        linear-gradient(#2f675f0d 1px, transparent 1px), var(--paper);
+      background-size: 34px 34px;
+      font: 1rem/1.5 "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+    }
+    main { width: min(760px, calc(100% - 24px)); margin: auto; padding: 22px 0 36px; }
+    a { color: var(--accent); font-weight: 700; }
+    h1 { margin: 6px 0 0; font-size: clamp(2rem, 7vw, 3.25rem); line-height: 1.15; }
+    p { margin: 0; }
+    .scope { color: var(--muted); margin: 6px 0 18px; font-weight: 700; }
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: clamp(12px, 4vw, 28px);
+      box-shadow: 0 8px 24px #1f2f3710;
+    }
+    .settings {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+    label { display: grid; gap: 4px; color: var(--muted); font-weight: 700; }
+    select, button, input { font: inherit; color: inherit; border: 1px solid var(--line); border-radius: 9px; }
+    select, input { background: white; padding: 8px 10px; width: 100%; min-width: 0; min-height: 44px; }
+    button { min-height: 44px; padding: 8px 12px; font-weight: 700; background: var(--soft); cursor: pointer; }
+    button:hover { border-color: var(--accent); }
+    :focus-visible { outline: 3px solid #b44f17; outline-offset: 2px; }
+    .primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .topline { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; color: var(--muted); font-weight: 700; }
+    h2 { margin: 12px 0; font-size: clamp(1.4rem, 5vw, 1.8rem); }
+    .word { display: flex; justify-content: center; gap: clamp(4px, 1.5vw, 12px); margin: 16px 0; }
+    .syllable { width: min(92px, 23%); min-width: 0; text-align: center; }
+    .sound, .han { display: grid; place-items: center; border-radius: 8px; }
+    .sound { min-height: 38px; margin-bottom: 4px; font-size: clamp(1rem, 4vw, 1.35rem); font-weight: 700; white-space: nowrap; }
+    .han { min-height: 63px; border: 1px solid var(--line); font-size: clamp(1.8rem, 7vw, 3rem); }
+    .blank { background: var(--soft); color: var(--accent); border: 2px dashed var(--accent); }
+    .answer-form { max-width: 500px; margin-inline: auto; }
+    .answer-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+    #answer { font-size: 1.25rem; }
+    .keyboard { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+    .keyboard button { padding: 4px 0; min-width: 0; font-size: 1.15rem; }
+    .keyboard .control { grid-column: span 3; font-size: 1rem; }
+    .feedback { margin-top: 10px; color: var(--accent); font-weight: 700; overflow-wrap: anywhere; }
+    .feedback:empty { margin: 0; }
+    .feedback[data-result="wrong"] { color: var(--wrong); }
+    #result h2 { margin-top: 0; }
+    #result button { margin-top: 14px; }
+    #result-list { padding-left: 1.5em; margin: 8px 0 0; }
+    [hidden] { display: none !important; }
+    @media (max-width: 620px) {
+      .settings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .keyboard { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    }
+  </style>
+  <script src="second-grade-lessons.js?v=2" defer></script>
+  <script src="circle-words.js" defer></script>
+  <script src="circle-quiz.js" defer></script>
+</head>
+<body>
+  <main>
+    <a href="index.html">← 回生字工具</a>
+    <h1>圈詞填空</h1>
+    <p class="scope">康軒國語二上 L7～L12</p>
+
+    <form id="settings" class="card settings">
+      <label>課次
+        <select id="lesson"><option value="all">L7～L12 全部</option></select>
+      </label>
+      <label>題型
+        <select id="mode">
+          <option value="mixed">混合填空</option>
+          <option value="han">看注音填國字</option>
+          <option value="sound">看國字填注音</option>
+        </select>
+      </label>
+      <label>題數
+        <select id="count">
+          <option value="5">5 題</option>
+          <option value="10" selected>10 題</option>
+          <option value="15">15 題</option>
+        </select>
+      </label>
+      <button type="submit">重新出題</button>
+    </form>
+
+    <section id="quiz" class="card" aria-labelledby="prompt">
+      <div class="topline"><span id="progress"></span><span id="source"></span></div>
+      <h2 id="prompt" tabindex="-1"></h2>
+      <div id="word" class="word"></div>
+      <form id="answer-form" class="answer-form">
+        <div class="answer-row">
+          <label><span id="answer-label">答案</span>
+            <input id="answer" type="text" autocomplete="off" spellcheck="false" enterkeyhint="go">
+          </label>
+          <button id="check" type="submit" class="primary">檢查答案</button>
+        </div>
+        <div id="keyboard" class="keyboard" aria-label="注音鍵盤" hidden></div>
+        <p id="feedback" class="feedback" role="status"></p>
+      </form>
+    </section>
+
+    <section id="result" class="card" aria-labelledby="result-title" hidden>
+      <h2 id="result-title" tabindex="-1">練習完成</h2>
+      <p id="score"></p>
+      <ul id="result-list" hidden></ul>
+      <button id="again" class="primary" type="button">再抽一組</button>
+    </section>
+  </main>
+</body>
+</html>
