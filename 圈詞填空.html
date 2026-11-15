@@ -27,7 +27,7 @@
       background-size: 34px 34px;
       font: 1rem/1.5 "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
     }
-    main { width: min(760px, calc(100% - 24px)); margin: auto; padding: 22px 0 36px; }
+    main { width: min(880px, calc(100% - 24px)); margin: auto; padding: 22px 0 36px; }
     a { color: var(--accent); font-weight: 700; }
     h1 { margin: 6px 0 0; font-size: clamp(2rem, 7vw, 3.25rem); line-height: 1.15; }
     p { margin: 0; }
@@ -56,12 +56,61 @@
     .topline { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; color: var(--muted); font-weight: 700; }
     h2 { margin: 12px 0; font-size: clamp(1.4rem, 5vw, 1.8rem); }
     .word { display: flex; justify-content: center; gap: clamp(4px, 1.5vw, 12px); margin: 16px 0; }
-    .syllable { width: min(92px, 23%); min-width: 0; text-align: center; }
-    .sound, .han { display: grid; place-items: center; border-radius: 8px; }
-    .sound { min-height: 38px; margin-bottom: 4px; font-size: clamp(1rem, 4vw, 1.35rem); font-weight: 700; white-space: nowrap; }
-    .han { min-height: 63px; border: 1px solid var(--line); font-size: clamp(1.8rem, 7vw, 3rem); }
+    .syllable {
+      width: min(114px, 23%);
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) clamp(24px, 7vw, 38px);
+      align-items: stretch;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+    }
+    .sound, .han { display: grid; place-items: center; }
+    .han { min-height: 72px; font-size: clamp(1.75rem, 7vw, 3.2rem); border-radius: 8px 0 0 8px; }
+    .sound {
+      border-left: 1px solid var(--line);
+      border-radius: 0 8px 8px 0;
+      font-size: clamp(.95rem, 3.4vw, 1.35rem);
+      font-weight: 700;
+      line-height: 1;
+    }
+    .bpmf { position: relative; display: grid; justify-items: center; padding-right: .24em; }
+    .bpmf-tone { position: absolute; right: -.28em; top: 50%; transform: translateY(-50%); font-size: .85em; }
+    .bpmf-neutral { font-size: .65em; height: .55em; display: grid; place-content: center; }
     .blank { background: var(--soft); color: var(--accent); border: 2px dashed var(--accent); }
-    .answer-form { max-width: 500px; margin-inline: auto; }
+    .answer-form { max-width: 540px; margin-inline: auto; }
+    .writing-heading, .answer-actions, .self-check {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .writing-heading { margin-bottom: 8px; }
+    .writing-heading p { color: var(--muted); font-weight: 700; }
+    .drawing-board {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 10px;
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      background:
+        linear-gradient(90deg, transparent calc(50% - .5px), #9dbbb2 calc(50% - .5px), #9dbbb2 calc(50% + .5px), transparent calc(50% + .5px)),
+        linear-gradient(0deg, transparent calc(50% - .5px), #9dbbb2 calc(50% - .5px), #9dbbb2 calc(50% + .5px), transparent calc(50% + .5px)),
+        linear-gradient(45deg, transparent calc(50% - .5px), #d7e7e0 calc(50% - .5px), #d7e7e0 calc(50% + .5px), transparent calc(50% + .5px)),
+        linear-gradient(-45deg, transparent calc(50% - .5px), #d7e7e0 calc(50% - .5px), #d7e7e0 calc(50% + .5px), transparent calc(50% + .5px)),
+        #f7fbf8;
+      touch-action: none;
+      cursor: crosshair;
+      user-select: none;
+    }
+    .drawing-board[data-type="sound"] {
+      background: linear-gradient(90deg, transparent calc(50% - .5px), #9dbbb2 calc(50% - .5px), #9dbbb2 calc(50% + .5px), transparent calc(50% + .5px)), #f7fbf8;
+    }
+    .answer-actions, .self-check { justify-content: flex-end; margin-top: 10px; }
+    .answer-actions > :first-child { margin-right: auto; }
+    button:disabled { opacity: .45; cursor: default; }
     .answer-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
     #answer { font-size: 1.25rem; }
     .keyboard { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
@@ -81,7 +130,7 @@
   </style>
   <script src="second-grade-lessons.js?v=2" defer></script>
   <script src="circle-words.js" defer></script>
-  <script src="circle-quiz.js" defer></script>
+  <script src="circle-quiz.js?v=2" defer></script>
 </head>
 <body>
   <main>
@@ -115,14 +164,31 @@
       <h2 id="prompt" tabindex="-1"></h2>
       <div id="word" class="word"></div>
       <form id="answer-form" class="answer-form">
-        <div class="answer-row">
+        <div class="writing-heading">
+          <p id="writing-label"></p>
+          <button id="input-toggle" type="button">改用打字</button>
+        </div>
+        <div id="handwriting">
+          <canvas id="drawing-board" class="drawing-board" width="960" height="960" aria-label="手寫作答區">請改用打字作答。</canvas>
+        </div>
+        <div id="typing" hidden>
           <label><span id="answer-label">答案</span>
             <input id="answer" type="text" autocomplete="off" spellcheck="false" enterkeyhint="go">
           </label>
+          <div id="keyboard" class="keyboard" aria-label="注音鍵盤" hidden></div>
+        </div>
+        <div class="answer-actions">
+          <div id="drawing-actions">
+            <button id="undo" type="button">退一筆</button>
+            <button id="clear" type="button">擦掉重寫</button>
+          </div>
           <button id="check" type="submit" class="primary">檢查答案</button>
         </div>
-        <div id="keyboard" class="keyboard" aria-label="注音鍵盤" hidden></div>
         <p id="feedback" class="feedback" role="status"></p>
+        <div id="self-check" class="self-check" hidden>
+          <button id="mark-wrong" type="button">我需要再練</button>
+          <button id="mark-correct" class="primary" type="button">我寫對了</button>
+        </div>
       </form>
     </section>
 
