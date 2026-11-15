@@ -11,6 +11,7 @@ ink.lineWidth = 12;
 ink.lineCap = ink.lineJoin = 'round';
 const undoButton = element('undo');
 const clearButton = element('clear');
+const showAnswerButton = element('show-answer');
 const lessons = newSecondGradeLessons.filter(lesson => Object.hasOwn(circleWords, lesson.lesson));
 const pool = lessons.flatMap(({ lesson, title }) =>
   circleWords[lesson].map(([word, sounds, targets, page]) => ({
@@ -137,14 +138,18 @@ board.addEventListener('pointerdown', event => {
   undoButton.disabled = clearButton.disabled = false;
 });
 
-board.addEventListener('pointermove', event => {
+function extendStroke(event) {
   if (event.pointerId !== activePointer) return;
   const stroke = strokes.at(-1);
   const point = boardPoint(event);
-  drawLine(stroke.at(-1), point);
+  const last = stroke.at(-1);
+  if (last.x === point.x && last.y === point.y) return;
+  drawLine(last, point);
   stroke.push(point);
-});
+}
 
+board.addEventListener('pointermove', extendStroke);
+board.addEventListener('pointerup', extendStroke);
 for (const eventName of ['pointerup', 'pointercancel', 'lostpointercapture']) {
   board.addEventListener(eventName, event => {
     if (event.pointerId === activePointer) activePointer = null;
@@ -168,10 +173,10 @@ function showInputMethod() {
   element('drawing-actions').hidden = typing || checked;
   element('input-toggle').hidden = checked;
   element('input-toggle').textContent = typing ? '改用手寫' : '改用打字';
-  checkButton.hidden = checked && !typing;
   keyboard.hidden = checked || questions[position].type !== 'sound';
   element('writing-label').hidden = typing || checked;
-  checkButton.textContent = typing ? '檢查答案' : '顯示正解';
+  showAnswerButton.hidden = true;
+  checkButton.textContent = '檢查答案';
 }
 
 element('input-toggle').addEventListener('click', () => {
@@ -189,7 +194,10 @@ function showQuestion(moveFocus) {
   element('prompt').textContent = isSound ? '看國字填注音' : '看注音填國字';
   showWord(question);
   board.dataset.type = question.type;
-  element('writing-label').textContent = isSound ? '在大格裡直寫注音和聲調' : '在大格裡寫一個國字';
+  element('sound-headings').hidden = !isSound;
+  element('writing-label').textContent = isSound
+    ? '左側由上往下每格寫一個符號，聲調寫右側，一聲留空。'
+    : '在大格裡寫一個國字，寫好後按「檢查答案」。';
   activePointer = null;
   strokes.length = 0;
   redrawBoard();
@@ -199,7 +207,6 @@ function showQuestion(moveFocus) {
   answerInput.inputMode = isSound ? 'none' : 'text';
   feedback.textContent = '';
   delete feedback.dataset.result;
-  element('self-check').hidden = true;
   showInputMethod();
   if (moveFocus) element('prompt').focus();
 }
@@ -260,23 +267,32 @@ function advanceQuestion() {
   else showQuestion(true);
 }
 
-function recordAnswer(isCorrect) {
+function gradeAnswer(value) {
+  const question = questions[position];
+  checked = true;
+  activePointer = null;
+  const isCorrect = value === question.answer;
   if (isCorrect) correct++;
-  else misses.push(questions[position]);
+  else misses.push(question);
+  showInputMethod();
+  answerInput.readOnly = true;
+  showWord(question, true);
+  element('progress').textContent = `第 ${position + 1}／${questions.length} 題 · 答對 ${correct} 題`;
+  feedback.dataset.result = isCorrect ? 'correct' : 'wrong';
+  let message = `正解是「${question.answer}」。`;
+  if (isCorrect) message = '答對了！';
+  else if (!typing && value) message = `辨識為「${value}」。${message}`;
+  feedback.textContent = `${message}${question.word} · 課本第 ${question.page} 頁`;
+  checkButton.textContent = position + 1 === questions.length ? '看結果' : '下一題';
+  checkButton.focus();
 }
 
-for (const [id, isCorrect] of [['mark-wrong', false], ['mark-correct', true]]) {
-  element(id).addEventListener('click', () => {
-    if (!checked || typing || element('quiz').hidden) return;
-    recordAnswer(isCorrect);
-    advanceQuestion();
-  });
-}
+showAnswerButton.addEventListener('click', () => gradeAnswer(null));
 
 element('answer-form').addEventListener('submit', event => {
   event.preventDefault();
   if (checked) {
-    if (typing) advanceQuestion();
+    advanceQuestion();
     return;
   }
 
@@ -286,13 +302,13 @@ element('answer-form').addEventListener('submit', event => {
       feedback.textContent = '請先在大格裡手寫。';
       return;
     }
-    checked = true;
-    activePointer = null;
-    showInputMethod();
-    showWord(question, true);
-    feedback.textContent = `正解是「${question.answer}」。${question.word} · 課本第 ${question.page} 頁`;
-    element('self-check').hidden = false;
-    element('mark-correct').focus({ preventScroll: true });
+    const value = circleHandwriting.read(strokes, question.type, question.answer, board.width);
+    if (value === null) {
+      feedback.textContent = '筆跡辨識不清楚。可以重寫，或略過看正解。';
+      showAnswerButton.hidden = false;
+      return;
+    }
+    gradeAnswer(value);
     return;
   }
 
@@ -302,17 +318,7 @@ element('answer-form').addEventListener('submit', event => {
     return;
   }
 
-  checked = true;
-  const isCorrect = value === question.answer;
-  recordAnswer(isCorrect);
-  showInputMethod();
-  answerInput.readOnly = true;
-  showWord(question, true);
-  element('progress').textContent = `第 ${position + 1}／${questions.length} 題 · 答對 ${correct} 題`;
-  feedback.dataset.result = isCorrect ? 'correct' : 'wrong';
-  feedback.textContent = `${isCorrect ? '答對了！' : `正解是「${question.answer}」。`}${question.word} · 課本第 ${question.page} 頁`;
-  checkButton.textContent = position + 1 === questions.length ? '看結果' : '下一題';
-  checkButton.focus();
+  gradeAnswer(value);
 });
 
 startRound(false);
