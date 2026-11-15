@@ -471,7 +471,7 @@
         <h1>生字查詢</h1>
         <div class="subtitle">輸入一個或多個國字，查詢康軒已整理生字是否學過。</div>
       </div>
-      <div class="scope">康軒一下 L1-L12<br>二上 L1-L6</div>
+      <div class="scope">康軒一下 L1-L12<br>二上 L1-L12</div>
     </header>
 
     <section class="search-panel">
@@ -482,7 +482,7 @@
       </div>
       <div id="summary" class="summary">請輸入要查的生字。</div>
       <section id="results" class="results"></section>
-      <div class="hint">可一次輸入多個字；重複字會自動合併。二上目前收錄 L1-L6。</div>
+      <div class="hint">可一次輸入多個字，重複輸入的字會自動合併。</div>
       <div class="chips" aria-label="常混字快速查詢">
         <button class="chip" type="button" data-query="生升">生 / 升</button>
         <button class="chip" type="button" data-query="珍珠">珍 / 珠</button>
@@ -495,13 +495,19 @@
         <button class="chip" type="button" data-query="運動舞">二上 L4</button>
         <button class="chip" type="button" data-query="竹籃鄉">二上 L5</button>
         <button class="chip" type="button" data-query="鎮餅節">二上 L6</button>
+        <button class="chip" type="button" data-query="衣胖針">二上 L7</button>
+        <button class="chip" type="button" data-query="渴烏喝">二上 L8</button>
+        <button class="chip" type="button" data-query="象操粗">二上 L9</button>
+        <button class="chip" type="button" data-query="雪梨夜">二上 L10</button>
+        <button class="chip" type="button" data-query="皮具飛">二上 L11</button>
+        <button class="chip" type="button" data-query="灰涼牠">二上 L12</button>
       </div>
     </section>
 
     <section id="lessonList" class="lesson-list"></section>
   </main>
 
-  <script src="second-grade-lessons.js"></script>
+  <script src="second-grade-lessons.js?v=2"></script>
   <script>
     const lessons = [
       { lesson: 1, title: "看", words: [["先","ㄒㄧㄢ","儿",6],["看","ㄎㄢˋ","目",9],["空","ㄎㄨㄥ","穴",8],["雲","ㄩㄣˊ","雨",12],["鳥","ㄋㄧㄠˇ","鳥",11],["草","ㄘㄠˇ","艸",10],["蟲","ㄔㄨㄥˊ","虫",18],["水","ㄕㄨㄟˇ","水",4],["再","ㄗㄞˋ","冂",6],["玩","ㄨㄢˊ","玉",8]] },
@@ -551,13 +557,14 @@
 
     const index = new Map();
     lessons.forEach(lesson => {
-      lesson.words.forEach(([char, zhuyin, radical = "待補", strokes = "待補"], i) => {
+      lesson.words.forEach(([char, zhuyin, radical = "待補", strokes = "待補", term], i) => {
         if (!index.has(char)) index.set(char, []);
         index.get(char).push({
           char,
           zhuyin,
           radical,
           strokes,
+          term,
           book: lesson.book || "一下",
           lesson: lesson.lesson,
           title: lesson.title,
@@ -604,8 +611,9 @@
       `;
     }
 
-    function termsFor(char) {
+    function termsFor(char, lessonTerm) {
       const terms = new Set();
+      if (lessonTerm) terms.add(lessonTerm);
       if (termHints[char]) terms.add(termHints[char]);
       Object.values(termHints).forEach(term => {
         if (term.includes(char)) terms.add(term);
@@ -613,8 +621,8 @@
       return [...terms].slice(0, 3);
     }
 
-    function termBlock(char) {
-      const terms = termsFor(char);
+    function termBlock(char, lessonTerm) {
+      const terms = termsFor(char, lessonTerm);
       if (terms.length === 0) return "";
       return `
         <div class="info-block">
@@ -660,7 +668,7 @@
               <div class="meta-value">${item.book}</div>
             </div>
           </div>
-          ${termBlock(item.char)}
+          ${termBlock(item.char, item.term)}
           ${confusionBlock(item.char)}
         </article>
       `;

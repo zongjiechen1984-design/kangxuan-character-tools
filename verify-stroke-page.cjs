@@ -62,7 +62,7 @@ const { pathToFileURL } = require('node:url');
     await page.reload();
     await page.waitForFunction(() => document.querySelector('#recordSummary').textContent.includes('完成 1 次'));
     await page.locator('#book').selectOption('二上');
-    if (await page.locator('#lesson option').count() !== 7) throw Error('lesson list');
+    if (await page.locator('#lesson option').count() !== 12) throw Error('lesson list');
     await page.route('**/zh-stroke-data/master/json/*.json', r => r.abort());
     await page.locator('#lesson').selectOption('7');
     await page.getByRole('button', { name: '描寫', exact: true }).click();

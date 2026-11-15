@@ -10,12 +10,17 @@ const url = name => base ? new URL(name, base).href : pathToFileURL(path.resolve
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto(url('生字查詢.html'));
     const expected = await page.evaluate(() => newSecondGradeLessons);
-    if (expected.length !== 3 || expected.some(l => l.words.length !== 18)) throw Error('expected 18 words per lesson');
+    if (expected.map(l => l.lesson).join(',') !== '4,5,6,7,8,9,10,11,12' ||
+        expected.some(l => l.words.length !== 18)) throw Error('expected 18 words per lesson');
     for (const l of expected) {
       for (const w of l.words) {
         await page.locator('#query').fill(w[0]);
-        const cards = await page.locator('#results').innerText();
-        if (!cards.includes(`二上 L${l.lesson}`) || !cards.includes(l.title) || !cards.includes(w[2])) throw Error('lookup missing '+w[0]);
+        const card = page.locator('#results .card').filter({ has: page.locator('.lesson').filter({ hasText: l.title }) });
+        const cards = await card.allInnerTexts();
+        if (cards.length !== 1 || !cards[0].includes(`二上 L${l.lesson}\n`) ||
+            !cards[0].includes(w[2]) || (w[4] && !cards[0].includes(w[4]))) {
+          throw Error(`lookup missing L${l.lesson} ${w[0]}`);
+        }
       }
     }
     await page.locator('#query').fill('哇');
@@ -37,14 +42,17 @@ const url = name => base ? new URL(name, base).href : pathToFileURL(path.resolve
       }
       return {count:added.length,failures};
     });
-    if (results.count !== 54 || results.failures.length) throw Error(JSON.stringify(results));
-    for (const lesson of [4,5,6]) {
+    if (results.count !== 162 || results.failures.length) throw Error(JSON.stringify(results));
+    for (const {lesson} of expected) {
+      await page.locator('#bookFilter').selectOption(`二上-${lesson}`);
+      const scope = await page.evaluate(() => ({
+        lessons: [...new Set(pool().map(i => i.lesson))],
+        count: pool().length,
+        question: state.current?.lesson
+      }));
+      if (scope.count !== 18 || scope.lessons.join(',') !== String(lesson) || scope.question !== lesson) throw Error('game lesson scope');
       for (const mode of ['char','zhuyin']) {
         await page.locator('#mode').selectOption(mode);
-        await page.evaluate(({lesson}) => {
-          const item = allItems.find(i=>i.book === '二上' && i.lesson === lesson);
-          const original = pickQuestion; pickQuestion = () => item; renderQuestion(); pickQuestion = original;
-        },{lesson});
         const answer = await page.evaluate(mode=>state.current[mode === 'char' ? 'char':'zhuyin'],mode);
         const button = page.locator('#choices button').filter({hasText:mode === 'char' ? answer : ''});
         if (mode === 'char') await button.first().click();
@@ -54,21 +62,24 @@ const url = name => base ? new URL(name, base).href : pathToFileURL(path.resolve
     }
     await page.screenshot({path:'new-lessons-game.png',fullPage:true});
     await page.goto(url('生字筆順.html'));
+    await page.route('**/zh-stroke-data/master/json/*.json', request => request.abort());
     await page.locator('[data-mode="trace"]').click();
     await page.locator('#book').selectOption('二上');
     for (const l of expected) {
       await page.locator('#lesson').selectOption(String(l.lesson));
-      if (await page.locator('#characters button').count() !== 18) throw Error('stroke lesson count');
+      const actual = await page.locator('#characters button').allTextContents();
+      if (actual.join('') !== l.words.map(w => w[0]).join('')) throw Error('stroke lesson order');
       for (const w of l.words) {
         await page.locator('#characters button').getByText(w[0],{exact:true}).click();
         await page.waitForFunction(() => !document.querySelector('#replay').disabled);
         if (!(await page.locator('#meta').textContent()).includes(`二上 L${l.lesson}`)) throw Error('stroke lesson wrong');
-        if (!(await page.locator('#writer svg').count())) throw Error('stroke SVG missing '+w[0]);
+        if (!(await page.locator('#writer svg path').count())) throw Error('stroke SVG missing '+w[0]);
+        if (!(await page.locator('#status').textContent()).includes(`共 ${w[3]} 筆`)) throw Error('stroke count for '+w[0]);
       }
     }
     if (await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)) throw Error('mobile overflow');
     await page.screenshot({path:'new-lessons-strokes.png',fullPage:true});
     if (errors.length) throw Error(errors.join('\n'));
-    console.log('PASS: all 54 words in lookup, game choices and grading, 54 stroke renderings, neutral tone, mobile layout');
+    console.log('PASS: 162 lesson words in lookup, game choices and grading, and bundled stroke rendering; mobile layout and neutral tone');
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

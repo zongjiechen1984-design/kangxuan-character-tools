@@ -5,32 +5,6 @@ const src = fs.readFileSync('生字查詢.html', 'utf8');
 const block = src.slice(src.indexOf('const lessons ='), src.indexOf('const termHints ='));
 const shared = fs.readFileSync('second-grade-lessons.js', 'utf8');
 const lessons = vm.runInNewContext(shared + '\n' + block + ';lessons');
-// 二上 L7 筆順練習依使用者提供的「我會寫字」生字表排列。
-lessons.push({
-  book: '二上',
-  lesson: 7,
-  title: '國王的新衣裳',
-  words: [
-    ['衣', 'ㄧ', '衣', 6],
-    ['胖', 'ㄆㄤˋ', '肉', 9],
-    ['針', 'ㄓㄣ', '金', 10],
-    ['簡', 'ㄐㄧㄢˇ', '竹', 18],
-    ['單', 'ㄉㄢ', '口', 12],
-    ['聰', 'ㄘㄨㄥ', '耳', 17],
-    ['明', 'ㄇㄧㄥˊ', '日', 8],
-    ['臣', 'ㄔㄣˊ', '臣', 6],
-    ['敢', 'ㄍㄢˇ', '攴', 12],
-    ['東', 'ㄉㄨㄥ', '木', 8],
-    ['西', 'ㄒㄧ', '襾', 6],
-    ['直', 'ㄓˊ', '目', 8],
-    ['棒', 'ㄅㄤˋ', '木', 12],
-    ['街', 'ㄐㄧㄝ', '行', 12],
-    ['滿', 'ㄇㄢˇ', '水', 14],
-    ['眼', 'ㄧㄢˇ', '目', 11],
-    ['哪', 'ㄋㄚ˙', '口', 10],
-    ['思', 'ㄙ', '心', 9]
-  ]
-});
 const words = [...new Map(lessons.flatMap(l => l.words).map(w => [w[0], w])).values()];
 const data = {}, issues = [];
 let index = 0;
@@ -54,7 +28,11 @@ async function worker() {
 }
 Promise.all(Array.from({ length: 6 }, worker)).then(() => {
   if (issues.length) throw Error(issues.join('\n'));
-  lessons.forEach(l => l.words.forEach(w => { if (w[0] === '貓') { w[2] = '豸'; w[3] = 16; } }));
+  lessons.forEach(lesson => {
+    lesson.words = lesson.words.map(([char, zhuyin, radical, count]) =>
+      char === '貓' ? [char, zhuyin, '豸', 16] : [char, zhuyin, radical, count]
+    );
+  });
   fs.writeFileSync('stroke-lessons.js', '// Generated from 生字查詢.html by build-stroke-data.cjs.\nconst strokeLessons = ' + JSON.stringify(lessons) + ';\n');
   const sorted = Object.fromEntries(Object.entries(data).sort(([a],[b]) => a.localeCompare(b)));
   fs.writeFileSync('stroke-data.js', '// Source: https://github.com/g0v/zh-stroke-data (MOE standard stroke order).\n// Educational, noncommercial use; attribution: Ministry of Education, Taiwan.\nconst bundledStrokeData = ' + JSON.stringify(sorted) + ';\n');

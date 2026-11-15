@@ -771,7 +771,7 @@
     </section>
   </main>
 
-  <script src="second-grade-lessons.js"></script>
+  <script src="second-grade-lessons.js?v=2"></script>
   <script>
     const lessons = [
       { book:"一下", lesson:1, title:"看", words:[["先","ㄒㄧㄢ"],["看","ㄎㄢˋ"],["空","ㄎㄨㄥ"],["雲","ㄩㄣˊ"],["鳥","ㄋㄧㄠˇ"],["草","ㄘㄠˇ"],["蟲","ㄔㄨㄥˊ"],["水","ㄕㄨㄟˇ"],["再","ㄗㄞˋ"],["玩","ㄨㄢˊ"]] },
@@ -791,7 +791,7 @@
       { book:"二上", lesson:3, title:"走過小巷", words:[["巷","ㄒㄧㄤˋ"],["叔","ㄕㄨˊ"],["牆","ㄑㄧㄤˊ"],["貓","ㄇㄠ"],["屋","ㄨ"],["捧","ㄆㄥˇ"],["蝴","ㄏㄨˊ"],["蝶","ㄉㄧㄝˊ"],["忙","ㄇㄤˊ"],["娶","ㄑㄩˇ"],["娘","ㄋㄧㄤˊ"],["黃","ㄏㄨㄤˊ"],["筆","ㄅㄧˇ"],["打","ㄉㄚˇ"],["扮","ㄅㄢˋ"],["模","ㄇㄛˊ"],["樣","ㄧㄤˋ"],["美","ㄇㄟˇ"],["麗","ㄌㄧˋ"],["越","ㄩㄝˋ"]] }
     ];
 
-    lessons.push(...newSecondGradeLessons.map(l => ({ ...l, words:l.words.map(w => w.slice(0,2)) })));
+    lessons.push(...newSecondGradeLessons);
     const STORAGE_KEY = "kangxuan-character-game-v1";
     const DAILY_KEY = "kangxuan-character-game-daily-v1";
     const DAILY_LIMIT = 10;
@@ -815,6 +815,7 @@
     Object.entries(newSecondGradeTerms).forEach(([char, term]) => { if (!termHints[char]) termHints[char] = term; });
     const commonTerms = new Set([
       ...Object.values(termHints),
+      ...newSecondGradeLessons.flatMap(lesson => lesson.words.map(word => word[4]).filter(Boolean)),
       "小看", "小狗", "小花", "小草", "小手", "小孩", "小朋友", "小學生",
       "大鳥", "大魚", "大樹", "大人", "大門", "白雲", "黑雲", "紅花",
       "生日", "升旗", "珍珠", "水珠", "水滴", "雨滴", "青草", "草地",
@@ -827,14 +828,14 @@
       馬:["媽","嗎"], 嗎:["媽","馬"], 休:["体"], 後:["候"], 只:["隻"],
       他:["她"], 它:["他"], 的:["地","得"], 亮:["高"], 早:["草"]
     };
-    const allItems = lessons.flatMap(lesson => lesson.words.map((word, index) => ({
-      key: `${lesson.book}-${lesson.lesson}-${word[0]}`,
+    const allItems = lessons.flatMap(lesson => lesson.words.map(([char, zhuyin, , , term], index) => ({
+      key: `${lesson.book}-${lesson.lesson}-${char}`,
       book: lesson.book,
       lesson: lesson.lesson,
       title: lesson.title,
-      char: word[0],
-      zhuyin: word[1],
-      term: termHints[word[0]] || word[0],
+      char,
+      zhuyin,
+      term: term || termHints[char] || char,
       order: index + 1
     })));
 
@@ -849,6 +850,12 @@
     };
 
     const el = id => document.getElementById(id);
+    const secondGradeOptions = document.createElement("optgroup");
+    secondGradeOptions.label = "二上課次";
+    lessons.filter(lesson => lesson.book === "二上").forEach(lesson => {
+      secondGradeOptions.append(new Option(`二上 L${lesson.lesson} ${lesson.title}`, `二上-${lesson.lesson}`));
+    });
+    el("bookFilter").append(secondGradeOptions);
     const canvas = el("writingCanvas");
     const ctx = canvas.getContext("2d");
     let drawing = false;
@@ -933,10 +940,8 @@
     }
 
     function termCells(item, blankTarget = true) {
-      let blanked = false;
       return [...item.term].slice(0, 3).map(character => {
-        const isTarget = blankTarget && !blanked && character === item.char;
-        if (isTarget) blanked = true;
+        const isTarget = blankTarget && character === item.char;
         return `<div class="mi-cell${isTarget ? " blank" : ""}"><span>${isTarget ? "" : escapeHtml(character)}</span></div>`;
       }).join("");
     }
@@ -950,10 +955,7 @@
 
     function termIfReplaced(item, replacementChar) {
       const characters = [...item.term].slice(0, 3);
-      const targetIndex = characters.indexOf(item.char);
-      if (targetIndex < 0) return "";
-      characters[targetIndex] = replacementChar;
-      return characters.join("");
+      return characters.map(character => character === item.char ? replacementChar : character).join("");
     }
 
     function createsAnotherCommonTerm(item, candidate) {
@@ -986,7 +988,8 @@
         return items.length ? items : allItems;
       }
       if (filter === "all") return allItems;
-      return allItems.filter(item => item.book === filter);
+      const [book, lesson] = filter.split("-");
+      return allItems.filter(item => item.book === book && (!lesson || String(item.lesson) === lesson));
     }
 
     function isDailyMode() {
