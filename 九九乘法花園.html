@@ -1846,7 +1846,8 @@ html&gt;body{padding:0}&lt;/style&gt;
 &lt;section id=&quot;multiplication-garden&quot; lang=&quot;zh-Hant&quot;&gt;
   &lt;h1&gt;🌱 九九乘法花園&lt;/h1&gt;
   &lt;div class=&quot;viz-row&quot;&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-mode=&quot;study&quot; aria-pressed=&quot;true&quot;&gt;看圖背一背&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-mode=&quot;animals&quot; aria-pressed=&quot;true&quot;&gt;🐾 餵小動物&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-mode=&quot;study&quot; aria-pressed=&quot;false&quot;&gt;看圖練習&lt;/button&gt;
     &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-mode=&quot;quiz&quot; aria-pressed=&quot;false&quot;&gt;闖關猜答案&lt;/button&gt;
   &lt;/div&gt;
   &lt;div class=&quot;viz-controls&quot;&gt;
@@ -1866,7 +1867,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       &lt;/select&gt;
     &lt;/label&gt;
   &lt;/div&gt;
-  &lt;div class=&quot;mg-panel&quot; id=&quot;mg-study&quot;&gt;
+  &lt;div class=&quot;mg-panel&quot; id=&quot;mg-study&quot; hidden&gt;
     &lt;div class=&quot;viz-row&quot;&gt;
       &lt;button type=&quot;button&quot; class=&quot;btn&quot; id=&quot;mg-prev&quot;&gt;上一個&lt;/button&gt;
       &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; id=&quot;mg-grow&quot;&gt;多種一排&lt;/button&gt;
@@ -1877,11 +1878,13 @@ html&gt;body{padding:0}&lt;/style&gt;
     &lt;/div&gt;
     &lt;div class=&quot;mg-plot&quot; id=&quot;mg-study-plot&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
   &lt;/div&gt;
-  &lt;div class=&quot;mg-panel&quot; id=&quot;mg-quiz&quot; hidden&gt;
+  &lt;div class=&quot;mg-panel&quot; id=&quot;mg-quiz&quot;&gt;
     &lt;div aria-live=&quot;polite&quot;&gt;
       &lt;p class=&quot;text-small text-muted&quot; id=&quot;mg-progress&quot;&gt;&lt;/p&gt;
       &lt;h2 class=&quot;tabular-nums&quot; id=&quot;mg-question&quot;&gt;&lt;/h2&gt;
     &lt;/div&gt;
+    &lt;div id=&quot;mg-animal-plot&quot; class=&quot;mg-plot&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+    &lt;div id=&quot;mg-choices&quot; class=&quot;viz-row&quot; role=&quot;group&quot; aria-label=&quot;選擇點心的數量&quot;&gt;&lt;/div&gt;
     &lt;div class=&quot;viz-row&quot; id=&quot;mg-form&quot;&gt;
       &lt;label class=&quot;form-label&quot;&gt;答案
         &lt;input id=&quot;mg-answer&quot; class=&quot;form-control&quot; inputmode=&quot;numeric&quot; autocomplete=&quot;off&quot; maxlength=&quot;3&quot;&gt;
@@ -1928,6 +1931,7 @@ html&gt;body{padding:0}&lt;/style&gt;
     background: var(--viz-series-1, var(--primary));
   }
   #multiplication-garden .mg-count { margin-inline-start: 6px; }
+  #multiplication-garden .mg-treat { min-width: 1em; text-align: center; }
   @media (prefers-reduced-motion: no-preference) {
     #multiplication-garden .mg-new { animation: mg-sprout 320ms ease-out both; }
     @keyframes mg-sprout {
@@ -1948,20 +1952,31 @@ html&gt;body{padding:0}&lt;/style&gt;
     const hint = element(&#x27;hint&#x27;);
     const modeButtons = root.querySelectorAll(&#x27;[data-mode]&#x27;);
     const numbers = Array.from({ length: 9 }, (_, index) =&gt; index + 1);
-    let mode = &#x27;study&#x27;;
+    const animals = [
+      { name: &#x27;兔兔&#x27;, icon: &#x27;🐰&#x27;, food: &#x27;🥕&#x27;, unit: &#x27;根紅蘿蔔&#x27; },
+      { name: &#x27;猴子&#x27;, icon: &#x27;🐵&#x27;, food: &#x27;🍌&#x27;, unit: &#x27;根香蕉&#x27; },
+      { name: &#x27;小熊&#x27;, icon: &#x27;🐻&#x27;, food: &#x27;🍎&#x27;, unit: &#x27;顆蘋果&#x27; },
+      { name: &#x27;小鳥&#x27;, icon: &#x27;🐦&#x27;, food: &#x27;🫐&#x27;, unit: &#x27;顆藍莓&#x27; }
+    ];
+    const choices = element(&#x27;choices&#x27;);
+    const animalPlot = element(&#x27;animal-plot&#x27;);
+    let mode = &#x27;animals&#x27;;
     let studyTable = 2;
     let quizTable = 2;
     let groups = 3;
     let questions = [];
     let questionIndex = 0;
+    let animalOffset = 0;
+    let answered = false;
 
-    function draw(plot, size, count, totals, animate) {
+    function draw(plot, size, count, totals, animate, food = &#x27;&#x27;) {
       const rows = Array.from({ length: count }, (_, index) =&gt; {
         const row = document.createElement(&#x27;div&#x27;);
         row.className = &#x27;mg-row&#x27;;
         for (let seedIndex = 0; seedIndex &lt; size; seedIndex++) {
           const seed = document.createElement(&#x27;span&#x27;);
-          seed.className = &#x27;mg-seed&#x27;;
+          seed.className = food ? &#x27;mg-treat&#x27; : &#x27;mg-seed&#x27;;
+          seed.textContent = food;
           if (animate &amp;&amp; index === count - 1) seed.classList.add(&#x27;mg-new&#x27;);
           row.append(seed);
         }
@@ -1993,26 +2008,56 @@ html&gt;body{padding:0}&lt;/style&gt;
 
     function showQuestion() {
       const [size, count] = questions[questionIndex];
-      element(&#x27;progress&#x27;).textContent = `第 ${questionIndex + 1} 題／共 ${questions.length} 題`;
-      element(&#x27;question&#x27;).textContent = `${size} × ${count} = ？`;
-      element(&#x27;hint-label&#x27;).textContent = `每排 ${size} 顆，共 ${count} 排。`;
-      draw(element(&#x27;hint-plot&#x27;), size, count, false, false);
+      const feeding = mode === &#x27;animals&#x27;;
+      const animal = animals[(animalOffset + questionIndex) % animals.length];
+      answered = false;
+      element(&#x27;progress&#x27;).textContent = feeding
+        ? `已完成 ${questionIndex}／${questions.length} 次餵食`
+        : `第 ${questionIndex + 1} 題／共 ${questions.length} 題`;
+      element(&#x27;question&#x27;).textContent = feeding
+        ? `${animal.icon} ${count} 隻${animal.name}，每隻要 ${size} ${animal.unit}。一共要拿幾個？`
+        : `${size} × ${count} = ？`;
+      animalPlot.hidden = !feeding;
+      choices.hidden = !feeding;
+      if (feeding) {
+        draw(animalPlot, size, count, false, false, animal.food);
+        const total = size * count;
+        const nearby = [total, total + size, total - size];
+        choices.replaceChildren(...shuffle(nearby).map((value) =&gt; {
+          const option = document.createElement(&#x27;button&#x27;);
+          option.type = &#x27;button&#x27;;
+          option.className = &#x27;btn&#x27;;
+          option.textContent = value;
+          option.addEventListener(&#x27;click&#x27;, () =&gt; checkAnswer(value));
+          return option;
+        }));
+      } else {
+        element(&#x27;hint-label&#x27;).textContent = `每排 ${size} 顆，共 ${count} 排。`;
+        draw(element(&#x27;hint-plot&#x27;), size, count, false, false);
+      }
       setHint(false);
-      form.hidden = false;
+      form.hidden = feeding;
       next.hidden = true;
       answer.value = &#x27;&#x27;;
       answer.removeAttribute(&#x27;aria-invalid&#x27;);
       element(&#x27;feedback&#x27;).textContent = &#x27;&#x27;;
     }
 
-    function startRound() {
-      const factors = quizTable ? [quizTable] : numbers;
-      questions = factors.flatMap((size) =&gt; numbers.map((count) =&gt; [size, count]));
-      for (let index = questions.length - 1; index &gt; 0; index--) {
+    function shuffle(items) {
+      for (let index = items.length - 1; index &gt; 0; index--) {
         const swap = Math.floor(Math.random() * (index + 1));
-        [questions[index], questions[swap]] = [questions[swap], questions[index]];
+        [items[index], items[swap]] = [items[swap], items[index]];
       }
-      questions = questions.slice(0, 9);
+      return items;
+    }
+
+    function startRound() {
+      const feeding = mode === &#x27;animals&#x27;;
+      const factors = quizTable ? [quizTable] : numbers;
+      const counts = feeding ? [2, 3, 4, 5] : numbers;
+      animalOffset = Math.floor(Math.random() * animals.length);
+      questions = shuffle(factors.flatMap((size) =&gt; counts.map((count) =&gt; [size, count])))
+        .slice(0, feeding ? 3 : 9);
       questionIndex = 0;
       showQuestion();
     }
@@ -2063,9 +2108,10 @@ html&gt;body{padding:0}&lt;/style&gt;
     hint.addEventListener(&#x27;click&#x27;, () =&gt; setHint(element(&#x27;hint-panel&#x27;).hidden));
     answer.addEventListener(&#x27;input&#x27;, () =&gt; answer.removeAttribute(&#x27;aria-invalid&#x27;));
 
-    function checkAnswer() {
-      if (form.hidden) return;
-      const response = answer.value.trim().normalize(&#x27;NFKC&#x27;);
+    function checkAnswer(choice) {
+      if (answered) return;
+      const feeding = mode === &#x27;animals&#x27;;
+      const response = feeding ? String(choice) : answer.value.trim().normalize(&#x27;NFKC&#x27;);
       const [size, count] = questions[questionIndex];
       if (!/^\d+$/.test(response)) {
         element(&#x27;feedback&#x27;).textContent = &#x27;請填入數字，再按對答案。&#x27;;
@@ -2074,17 +2120,30 @@ html&gt;body{padding:0}&lt;/style&gt;
         return;
       }
       if (Number(response) !== size * count) {
-        element(&#x27;feedback&#x27;).textContent = &#x27;再試一次！可以按「看圖提示」數一數。&#x27;;
-        answer.select();
+        element(&#x27;feedback&#x27;).textContent = feeding
+          ? `想一想，每一排有 ${size} 個，數完 ${count} 排再選一次。`
+          : &#x27;再試一次！可以按「看圖提示」數一數。&#x27;;
+        if (!feeding) answer.select();
         return;
       }
+      answered = true;
       const finished = questionIndex === questions.length - 1;
-      element(&#x27;feedback&#x27;).textContent = finished
-        ? `答對了！${size} × ${count} = ${size * count}。🎉 九題都過關了！`
-        : `答對了！${size} × ${count} = ${size * count}。`;
+      const equation = `${size} × ${count} = ${size * count}`;
+      if (feeding) {
+        const animal = animals[(animalOffset + questionIndex) % animals.length];
+        element(&#x27;progress&#x27;).textContent = `已完成 ${questionIndex + 1}／${questions.length} 次餵食`;
+        element(&#x27;feedback&#x27;).textContent = finished
+          ? `🎉 小動物都吃飽了！${equation}。`
+          : `${animal.icon} ${animal.name}吃到點心了！${equation}。`;
+        choices.hidden = true;
+      } else {
+        element(&#x27;feedback&#x27;).textContent = finished
+          ? `答對了！${equation}。🎉 九題都過關了！`
+          : `答對了！${equation}。`;
+      }
       form.hidden = true;
       setHint(false);
-      next.textContent = finished ? &#x27;再玩一輪&#x27; : &#x27;下一題&#x27;;
+      next.textContent = finished ? &#x27;再玩一輪&#x27; : feeding ? &#x27;餵下一群&#x27; : &#x27;下一題&#x27;;
       next.hidden = false;
       next.focus();
     }
@@ -2101,10 +2160,12 @@ html&gt;body{padding:0}&lt;/style&gt;
       questionIndex++;
       if (questionIndex === questions.length) startRound();
       else showQuestion();
-      answer.focus();
+      if (mode === &#x27;animals&#x27;) choices.firstElementChild.focus();
+      else answer.focus();
     });
 
-    showStudy();
+    mixed.hidden = false;
+    startRound();
   })();
 &lt;/script&gt;
 
