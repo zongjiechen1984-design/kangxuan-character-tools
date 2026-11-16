@@ -41,6 +41,13 @@ button:disabled { cursor: default; }
 .sunlight {
   position: absolute; inset: 0; background: linear-gradient(100deg, #3062586b, transparent 56%);
 }
+.game[data-stop="bridge"] .sunlight, .game[data-stop="stones"] .sunlight {
+  background: linear-gradient(100deg, #164a6370, #5ab5a538);
+}
+.game[data-stop="cave"] .sunlight, .game[data-stop="lantern"] .sunlight {
+  background: linear-gradient(140deg, #29234f9c, #21407550);
+}
+.game[data-stop="cloud"] .sunlight { background: linear-gradient(145deg, #f9d0806b, #fff4ba20); }
 .runner {
   position: absolute; z-index: 3; bottom: 16%; left: 12%;
   width: clamp(91px, 20vw, 166px); aspect-ratio: 1; transform: translateY(var(--jump-offset, 0px));
@@ -62,6 +69,25 @@ button:disabled { cursor: default; }
   border-radius: 25% 25% 4px 4px; height: clamp(68px, 12vw, 105px);
   border-color: #2e5c5d; background: repeating-linear-gradient(0deg, #558888 0 23%, #79abaa 24% 29%);
 }
+.obstacle[data-kind="vines"] {
+  border-color: #406535; background: repeating-linear-gradient(114deg, #6c8d40 0 13%, #457d45 14% 28%);
+}
+.obstacle[data-kind="stones"] {
+  height: clamp(68px, 12vw, 105px); border-color: #3c696a;
+  background: repeating-linear-gradient(168deg, #8bb7a4 0 23%, #547e7c 24% 30%);
+}
+.obstacle[data-kind="wheel"] {
+  border-radius: 50%; height: auto; aspect-ratio: 1; border-color: #734522;
+  background: repeating-conic-gradient(#985325 0deg 15deg, #e5ab60 15deg 45deg);
+}
+.obstacle[data-kind="cave"] {
+  color: #e9c8ff; border-color: #46436b;
+  background: linear-gradient(125deg, #795a94, #3e3c66 70%); text-shadow: 0 0 16px #ffc3ff;
+}
+.obstacle[data-kind="cloud"] {
+  color: #38655f; height: clamp(68px, 12vw, 105px); border-radius: 80px; border-color: #b8d7be;
+  background: radial-gradient(ellipse at 50% 10%, #fff9dd, #9fd1bc); text-shadow: none;
+}
 .obstacle[data-kind="lantern"] {
   border-radius: 36% 36% 9px 9px; background: radial-gradient(ellipse, #ffbe61, #b65341 71%); border-color: #753e3a;
 }
@@ -74,6 +100,11 @@ button:disabled { cursor: default; }
 .game[data-state="clearing"] .sparkles { opacity: 1; }
 .game[data-state="clearing"] .obstacle[data-kind="door"] { opacity: 0; transform: translateX(-50%) scaleX(.1); }
 .game[data-state="clearing"] .obstacle[data-kind="bridge"] { transform: translate(-50%, 24%) scaleX(1.45) scaleY(.18); }
+.game[data-state="clearing"] .obstacle[data-kind="vines"] { transform: translate(-50%, -48%) scaleY(.35); opacity: .35; }
+.game[data-state="clearing"] .obstacle[data-kind="stones"] { transform: translate(-50%, 28%) scaleX(1.5) scaleY(.45); }
+.game[data-state="clearing"] .obstacle[data-kind="wheel"] { transform: translate(-50%, -28%) rotate(135deg); }
+.game[data-state="clearing"] .obstacle[data-kind="cave"] { transform: translateX(-50%) scaleX(.3); box-shadow: 0 0 45px #d398f9; }
+.game[data-state="clearing"] .obstacle[data-kind="cloud"] { transform: translate(-50%, -85%); }
 .game[data-state="clearing"] .obstacle[data-kind="lantern"] { box-shadow: 0 0 54px 20px #ffdc6f, inset 0 0 24px #fff2b8; }
 .game[data-state="welcome"] .runner { left: 8%; z-index: 2; width: clamp(94px, 25vw, 242px); }
 .game[data-state="welcome"] .obstacle, .game[data-state="welcome"] .firefly { display: none; }

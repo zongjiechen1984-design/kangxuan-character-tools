@@ -11,13 +11,18 @@
   const groups = get('groups');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const route = [
-    { kind: 'door', title: '第一站｜森林木門', icon: '🔒', cleared: '木門打開了！' },
-    { kind: 'bridge', title: '第二站｜河谷吊橋', icon: '⚙', cleared: '吊橋放下來了！' },
-    { kind: 'lantern', title: '第三站｜螢火燈塔', icon: '✦', cleared: '燈塔亮起來了！' }
+    { kind: 'door', title: '森林木門', icon: '🔒', cleared: '木門打開了！', duration: 7800 },
+    { kind: 'vines', title: '藤蔓小徑', icon: '🌿', cleared: '藤蔓捲起來，路通了！', duration: 8300 },
+    { kind: 'bridge', title: '河谷吊橋', icon: '⚙', cleared: '吊橋放下來了！', duration: 8600 },
+    { kind: 'stones', title: '溪邊踏石', icon: '💧', cleared: '踏石浮起來，可以過溪了！', duration: 8000 },
+    { kind: 'wheel', title: '水車工坊', icon: '✿', cleared: '水車轉動，閘門升起來了！', duration: 8900 },
+    { kind: 'cave', title: '水晶洞口', icon: '◆', cleared: '水晶發光，洞口打開了！', duration: 9200 },
+    { kind: 'cloud', title: '雲端升降台', icon: '☁', cleared: '雲朵升起，載你上山了！', duration: 8700 },
+    { kind: 'lantern', title: '螢火燈塔', icon: '✦', cleared: '燈塔亮起來了！', duration: 9600 }
   ];
-  const segmentDuration = 3950;
-  const fireflyTime = 2100;
+  const totalDuration = route.reduce((total, stop) => total + stop.duration, 0);
   const jumpDuration = 720;
+  const fireflyWindow = 460;
   let stage = 0;
   let gems = 0;
   let bonusGems = 0;
@@ -25,7 +30,9 @@
   let progress = 0;
   let jumpTime = 0;
   let lastFrame = 0;
-  let collected = false;
+  let fireflyIndex = 0;
+  let fireflyTimes = [];
+  let trailTime = 0;
   let sound = null;
   let muted = true;
 
@@ -97,6 +104,7 @@
     gems = 0;
     bonusGems = 0;
     stage = 0;
+    trailTime = 0;
     get('gems').textContent = '✦ 0';
     get('gems').setAttribute('aria-label', '已收集 0 顆螢火');
     run();
@@ -107,7 +115,9 @@
     progress = 0;
     jumpTime = 0;
     lastFrame = 0;
-    collected = false;
+    fireflyIndex = 0;
+    fireflyTimes = [stop.duration * .29, stop.duration * .68];
+    game.dataset.stop = stop.kind;
     obstacle.dataset.kind = stop.kind;
     obstacle.style.left = '115%';
     get('gate-art').textContent = stop.icon;
@@ -116,7 +126,7 @@
     runner.style.setProperty('--jump-offset', '0px');
     get('distance').textContent = '關卡 ' + (stage + 1) + '／' + route.length;
     setState('running');
-    say('看到螢火靠近時，按跳躍就能收集。');
+    say('前往' + stop.title + '。看到螢火靠近時，按跳躍收集。');
     jumpButton.focus({ preventScroll: true });
     requestAnimationFrame(frame);
   }
@@ -133,30 +143,43 @@
     lastFrame = time;
     progress += delta;
     jumpTime = Math.max(0, jumpTime - delta);
-    const step = Math.min(progress / segmentDuration, 1);
+    const step = Math.min(progress / route[stage].duration, 1);
     if (motion.matches) {
       obstacle.style.left = '64%';
-      firefly.style.left = '50%';
     } else {
-      obstacle.style.left = (115 - 54 * step) + '%';
-      firefly.style.left = (28 + 77 * (1 - progress / fireflyTime)) + '%';
-      landscape.style.backgroundPosition = (42 + 17 * step) + '% 62%';
-      landscape.style.setProperty('--ground-offset', (-progress / 8) + 'px');
+      obstacle.style.left = (174 - 113 * step) + '%';
+      const distance = trailTime + progress;
+      landscape.style.backgroundPosition = (18 + 68 * distance / totalDuration) + '% 62%';
+      landscape.style.setProperty('--ground-offset', (-distance / 8) + 'px');
       const height = Math.min(116, Math.max(76, game.clientHeight * .2));
       runner.style.setProperty('--jump-offset', (-Math.sin(Math.PI * jumpTime / jumpDuration) * height) + 'px');
     }
-    const canCollect = motion.matches ? !firefly.hidden : Math.abs(progress - fireflyTime) <= 380;
-    if (!collected && canCollect && jumpTime > 100) {
-      collected = true;
+    updateFirefly();
+    if (step < 1) requestAnimationFrame(frame);
+    else openQuestion();
+  }
+
+  function updateFirefly() {
+    const arrival = fireflyTimes[fireflyIndex];
+    if (arrival === undefined) {
       firefly.hidden = true;
+      return;
+    }
+    const untilArrival = arrival - progress;
+    const reduced = motion.matches;
+    const visible = reduced ? untilArrival <= 1000 : untilArrival <= 1550;
+    firefly.style.left = reduced ? '42%' : (28 + untilArrival * .054) + '%';
+    const close = reduced ? visible : Math.abs(untilArrival) <= fireflyWindow;
+    const caught = close && untilArrival >= -fireflyWindow && jumpTime > 100;
+    if (caught) {
       bonusGems++;
       addGem();
       say('抓到一顆額外的螢火！');
       playNotes([659, 880]);
     }
-    if (progress > fireflyTime + 450) firefly.hidden = true;
-    if (step < 1) requestAnimationFrame(frame);
-    else openQuestion();
+    const passed = caught || untilArrival < -fireflyWindow;
+    if (passed) fireflyIndex++;
+    firefly.hidden = !visible || passed;
   }
 
   function setHint(open) {
@@ -170,7 +193,7 @@
     const total = size * count;
     const candidates = [total, total - size, total + size, total + 1, total + size * 2, total + size * 3];
     const choices = [...new Set(candidates.filter((value) => value > 0))].slice(0, 4);
-    get('gate-name').textContent = route[stage].title;
+    get('gate-name').textContent = '第 ' + (stage + 1) + ' 關｜' + route[stage].title;
     get('equation').textContent = size + ' × ' + count + ' = ?';
     get('feedback').textContent = '';
     setHint(false);
@@ -211,6 +234,7 @@
     say(size + ' × ' + count + '＝' + (size * count) + '。' + route[stage].cleared);
     playNotes([523, 659, 784]);
     setTimeout(() => {
+      trailTime += route[stage].duration;
       stage++;
       if (stage < route.length) run();
       else {
