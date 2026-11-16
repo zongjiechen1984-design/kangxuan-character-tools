@@ -29,6 +29,10 @@
   .game-header h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.2rem); letter-spacing: .05em; }
   .game-title { display: flex; align-items: center; gap: .55rem; }
   .game-title span { font-size: 1.7rem; }
+  .game-header .runner-link {
+    padding: .55rem .85rem; border-radius: .85rem; background: #235f44;
+    color: #fffdf4; font-weight: 700; text-decoration: none;
+  }
   .game-map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin: 0 0 .85rem; padding: 0; list-style: none; }
   .game-map li {
     display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .4rem;
@@ -127,6 +131,7 @@
         <option value="hard">挑戰｜6～9</option>
         <option value="mixed">混合｜1～9</option>
       </select>
+      <a class="runner-link" href="forest-run.html">玩森林跑酷 →</a>
     </div>
   </header>
   <ol class="game-map" aria-label="冒險地圖">

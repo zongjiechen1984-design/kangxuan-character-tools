@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>乘法森林跑酷</title>
+  <link rel="stylesheet" href="forest-run.css">
+  <script defer src="forest-run.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="header">
+      <a href="九九乘法花園.html">‹ 乘法花園</a>
+      <button type="button" id="sound" aria-pressed="false">音效關閉</button>
+    </header>
+    <section class="game" id="game" data-state="welcome" aria-label="乘法森林跑酷">
+      <div class="landscape" id="landscape" aria-hidden="true">
+        <div class="sunlight"></div>
+        <div class="obstacle" id="obstacle"><span id="gate-art"></span></div>
+        <div class="firefly" id="firefly">✦</div>
+        <div class="runner" id="runner"><img src="forest-run-panda.webp" alt=""></div>
+        <div class="sparkles" id="sparkles"><span>✦</span><span>★</span><span>✧</span><span>✦</span><span>★</span></div>
+      </div>
+      <div class="hud" id="hud" hidden>
+        <span id="distance">關卡 1／3</span>
+        <span id="gems" aria-label="已收集的螢火">✦ 0</span>
+      </div>
+      <div class="overlay" id="welcome">
+        <div class="welcome">
+          <p>小熊貓找螢火</p>
+          <h1>乘法森林跑酷</h1>
+          <label for="tables">乘法</label>
+          <select id="tables">
+            <option value="2,3,4,5">暖身 2～5</option>
+            <option value="6,7,8,9">挑戰 6～9</option>
+            <option value="1,2,3,4,5,6,7,8,9">混合 1～9</option>
+          </select>
+          <button type="button" class="primary" id="start">出發！</button>
+        </div>
+      </div>
+      <div class="overlay" id="question" hidden>
+        <section class="question-card" aria-labelledby="equation">
+          <p class="eyebrow" id="gate-name"></p>
+          <h2 id="equation"></h2>
+          <div class="answers" id="answers" role="group" aria-label="選擇答案"></div>
+          <p id="feedback" class="feedback" aria-live="polite"></p>
+          <button type="button" class="quiet" id="hint" aria-expanded="false" aria-controls="groups">看圖提示</button>
+          <div class="groups" id="groups" hidden></div>
+        </section>
+      </div>
+      <div class="overlay" id="finish" hidden>
+        <section class="welcome" aria-labelledby="finish-title">
+          <p class="medal" aria-hidden="true">✦</p>
+          <h2 id="finish-title">找到螢火寶箱了！</h2>
+          <p id="result"></p>
+          <button type="button" class="primary" id="replay">再跑一次</button>
+          <button type="button" class="quiet" id="menu">換乘法</button>
+        </section>
+      </div>
+    </section>
+    <div class="controls" id="controls" hidden>
+      <p id="route-message" aria-live="polite"></p>
+      <button type="button" class="primary jump" id="jump">↑ 跳躍</button>
+    </div>
+  </main>
+</body>
+</html>
