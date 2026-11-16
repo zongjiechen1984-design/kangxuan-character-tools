@@ -8,8 +8,157 @@
 <title>九九乘法花園</title>
 <style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;max-width:760px;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
 
+<style>
+  :root { color-scheme: light; background: #f1eee5; }
+  body { color: #23352c; font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; }
+  .adventure { max-width: 940px; margin: 0 auto; }
+  .adventure * { box-sizing: border-box; }
+  .adventure [hidden] { display: none !important; }
+  .adventure button, .adventure select {
+    color: inherit; font: inherit; font-weight: 700; padding: .65rem 1rem;
+    min-height: 44px; border-radius: .85rem; border: 1px solid #b8cbb9; background: #fffdf4;
+  }
+  .adventure button:not(:disabled), .practice summary { cursor: pointer; }
+  .adventure button:disabled { opacity: .45; }
+  .adventure button:focus-visible, .adventure select:focus-visible, .practice summary:focus-visible { outline: 3px solid #875bb8; outline-offset: 3px; }
+  .adventure button:not(:disabled):hover { border-color: #346d54; background: #edf8e7; }
+  .adventure .action { background: #235f44; border-color: #235f44; color: #fffdf4; }
+  .adventure .action:not(:disabled):hover { background: #184632; color: #fffdf4; }
+  .game-header, .game-settings, .game-actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+  .game-header { justify-content: space-between; margin-bottom: 1rem; }
+  .game-header h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.2rem); letter-spacing: .05em; }
+  .game-title { display: flex; align-items: center; gap: .55rem; }
+  .game-title span { font-size: 1.7rem; }
+  .game-map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin: 0 0 .85rem; padding: 0; list-style: none; }
+  .game-map li {
+    display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .4rem;
+    padding: .45rem .65rem; min-width: 0; border-radius: .8rem; background: #e2e7da; font-weight: 700;
+  }
+  .game-map li[aria-current="step"] { background: #d1e7c5; box-shadow: inset 0 0 0 2px #497856; }
+  .game-map li[data-cleared="true"] { background: #f3dfaa; }
+  .game-map .map-icon { font-size: 1.3rem; }
+  .game-stage { border-radius: 1.4rem; overflow: hidden; box-shadow: 0 8px 24px #22382a1b; background: #fffdf5; }
+  .game-scene {
+    position: relative; isolation: isolate; overflow: hidden; min-height: 210px;
+    background: linear-gradient(#a6e5ea, #e4f0be 67%, #80bc78 68%, #38765c);
+  }
+  .game-scene::before, .game-scene::after {
+    content: ""; position: absolute; z-index: -1; width: 75%; height: 85%; bottom: -47%;
+    border-radius: 50%; background: #70a863; transform: rotate(-14deg);
+  }
+  .game-scene::before { left: -15%; }
+  .game-scene::after { right: -15%; background: #59985c; transform: rotate(14deg); }
+  .game-scene[data-zone="river"] { background: linear-gradient(#b2e4f1, #f1f4cc 61%, #62c5db 62%, #2a87ac); }
+  .game-scene[data-zone="sky"] { background: radial-gradient(ellipse at 65% 90%, #a072c2, transparent 72%), linear-gradient(#242751, #543972 75%, #2d3158); }
+  .game-scene[data-zone="sky"]::before, .game-scene[data-zone="sky"]::after { background: #34355e; }
+  .game-scenery { position: absolute; inset: 0; pointer-events: none; }
+  .game-scenery span { position: absolute; font-size: clamp(1.9rem, 7vw, 4.4rem); }
+  .game-scenery span:nth-child(1) { left: 4%; bottom: 8%; transform: rotate(-8deg); }
+  .game-scenery span:nth-child(2) { right: 9%; top: 6%; }
+  .game-scenery span:nth-child(3) { right: 2%; bottom: 10%; transform: rotate(8deg); }
+  .game-mascot {
+    position: absolute; display: grid; place-items: center; left: 50%; bottom: 14%;
+    transform: translateX(-50%); padding: .35rem .7rem; border-radius: 2.5rem;
+    background: #fffdf4e8; box-shadow: 0 .7rem 0 #34472c25; font-size: clamp(2.65rem, 11vw, 5.1rem);
+  }
+  .game-scene[data-zone="river"] .game-mascot { left: 16%; bottom: 31%; font-size: clamp(2rem, 8vw, 3.4rem); }
+  .game-scene[data-zone="sky"] .game-mascot { bottom: 12%; font-size: clamp(2rem, 8vw, 3.4rem); }
+  .game-scene[data-win="true"][data-zone="river"] .game-mascot { left: 84%; }
+  .game-scene[data-win="true"][data-zone="sky"] .game-mascot { left: 89%; bottom: 29%; }
+  .stage-bridge { display: flex; justify-content: center; position: absolute; bottom: 26%; left: 14%; right: 14%; gap: 3px; }
+  .stage-bridge span { flex: 1; height: 17px; border-radius: 4px; background: #a97648; border-bottom: 4px solid #755135; }
+  .stage-stars { position: absolute; inset: 6% 25% 26% 9%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; justify-items: center; gap: .3rem; }
+  .stage-stars span { display: inline-flex; gap: 1px; padding: .12rem .23rem; background: #161a4470; border-radius: .65rem; color: #fff4a2; }
+  .stage-stars b { font-size: clamp(.63rem, 1.65vw, 1rem); }
+  .stage-food { position: absolute; left: 64%; bottom: 28%; font-size: clamp(1.65rem, 6vw, 3rem); }
+  .stage-treasure { position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%); font-size: 2.8rem; }
+  .game-confetti { position: absolute; inset: 30% 8% auto; display: flex; justify-content: space-around; pointer-events: none; }
+  .game-confetti span { color: #ffd150; font-size: 1.7rem; text-shadow: 0 2px 3px #77461a88; }
+  .game-content { padding: clamp(.9rem, 3vw, 1.65rem); display: grid; gap: .75rem; }
+  .game-content p, .game-content h2 { margin: 0; }
+  .game-content h2 { font-size: clamp(1.2rem, 4vw, 1.6rem); }
+  .game-status { color: #456253; font-weight: 700; }
+  .game-actions button { min-width: 4rem; }
+  .game-actions .number-choice { font-size: 1.3rem; }
+  .game-actions[data-zone="forest"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 21rem; gap: .4rem; }
+  .game-actions[data-zone="forest"] button { min-width: 0; padding-inline: .25rem; }
+  .game-hint { display: grid; justify-items: start; gap: .25rem; }
+  .game-hint div { display: flex; gap: .1rem; padding: .16rem .4rem; border-radius: .4rem; background: #e4ebd9; }
+  .game-hint span { min-width: 1em; text-align: center; }
+  .game-feedback:empty { display: none; }
+  .game-feedback { color: #385b45; font-weight: 700; }
+  .practice { max-width: 940px; margin: 1rem auto 0; }
+  .practice summary { font-weight: 700; padding: .4rem; }
+  .practice iframe { border-radius: 1rem; margin-top: .5rem; }
+  @media (prefers-reduced-motion: no-preference) {
+    .game-scene[data-zone="river"] .game-mascot { transition: left 950ms ease-in-out; }
+    .game-scene[data-zone="sky"] .game-mascot { transition: left 800ms ease-out, bottom 760ms cubic-bezier(.25,.8,.4,1); }
+    .game-scene[data-win="true"][data-zone="forest"] .game-mascot { animation: mascot-hop 660ms ease-out; }
+    .stage-food { animation: deliver-treat 650ms ease-out both; }
+    .game-scene[data-treasure="true"] .game-mascot { animation: trophy-rise 650ms ease-out both; }
+    .game-confetti span { animation: badge-spark 770ms ease-out both; }
+    .game-confetti span:nth-child(even) { animation-delay: 80ms; }
+    .stage-bridge span[data-new="true"], .stage-stars span { animation: piece-drop 300ms ease-out both; }
+    @keyframes mascot-hop { 35% { transform: translate(-50%, -35px) rotate(-11deg); } 70% { transform: translate(-50%, 2px) rotate(8deg); } }
+    @keyframes deliver-treat { from { transform: translate(90%, 75%); opacity: .1; } to { transform: translate(-45%, -10%) rotate(-16deg); } }
+    @keyframes trophy-rise { from { transform: translate(-50%, 65%) scale(.3); opacity: .1; } to { transform: translate(-50%, 0) scale(1); } }
+    @keyframes badge-spark { from { transform: translateY(25px) scale(.3); opacity: .3; } to { transform: translateY(-16px) rotate(28deg); opacity: 1; } }
+    @keyframes piece-drop { from { transform: translateY(-12px) scale(.7); opacity: .2; } }
+  }
+  @media (max-width: 680px) {
+    .stage-stars { grid-template-columns: repeat(2, minmax(0, 1fr)); inset-inline: 5% 24%; gap: .2rem; }
+  }
+  @media (max-width: 460px) {
+    body { padding: .65rem; }
+    .game-map li { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: .35rem .2rem; font-size: .85rem; }
+    .game-scene { min-height: 174px; }
+    .game-hint span { font-size: .88rem; }
+  }
+</style>
 </head>
 <body>
+<main class="adventure" id="adventure">
+  <header class="game-header">
+    <div class="game-title"><span aria-hidden="true">🧭</span><h1>九九乘法大冒險</h1></div>
+    <div class="game-settings">
+      <label for="adventure-level">難度</label>
+      <select id="adventure-level">
+        <option value="easy">暖身｜2～5</option>
+        <option value="hard">挑戰｜6～9</option>
+        <option value="mixed">混合｜1～9</option>
+      </select>
+    </div>
+  </header>
+  <ol class="game-map" aria-label="冒險地圖">
+    <li aria-current="step"><span class="map-icon" aria-hidden="true">🌳</span>點心森林</li>
+    <li><span class="map-icon" aria-hidden="true">🌉</span>木板河谷</li>
+    <li><span class="map-icon" aria-hidden="true">🌙</span>星燈山頂</li>
+  </ol>
+  <section class="game-stage" aria-labelledby="adventure-question">
+    <div class="game-scene" id="adventure-scene" data-zone="forest" aria-hidden="true">
+      <div class="game-scenery" id="adventure-scenery"></div>
+      <div class="stage-bridge" id="adventure-bridge" hidden></div>
+      <div class="stage-stars" id="adventure-stars" hidden></div>
+      <div class="game-mascot" id="adventure-mascot">🐰</div>
+      <span class="stage-food" id="adventure-food" hidden>🥕</span>
+      <span class="stage-treasure" id="adventure-treasure" hidden>🎁</span>
+      <div class="game-confetti" id="adventure-confetti" hidden><span>✦</span><span>★</span><span>✧</span><span>★</span><span>✦</span></div>
+    </div>
+    <div class="game-content">
+      <p class="game-status" id="adventure-status" aria-live="polite"></p>
+      <h2 id="adventure-question">點心森林</h2>
+      <div class="game-actions" id="adventure-actions"></div>
+      <div class="game-actions">
+        <button type="button" id="adventure-hint" aria-expanded="false" aria-controls="adventure-hint-rows">看圖提示</button>
+        <button type="button" class="action" id="adventure-next" hidden>繼續冒險</button>
+      </div>
+      <div class="game-hint" id="adventure-hint-rows" hidden></div>
+      <p class="game-feedback" id="adventure-feedback" aria-live="polite"></p>
+    </div>
+  </section>
+</main>
+<details class="practice">
+<summary>想練同一個數？打開乘法花園</summary>
 <iframe id="codex-visualization" sandbox="allow-scripts" referrerpolicy="no-referrer" title="九九乘法花園" data-srcdoc="&lt;!doctype html&gt;
 &lt;html lang=&quot;zh-Hant&quot; data-visualize-standalone&gt;
 &lt;head&gt;
@@ -2757,6 +2906,238 @@ html&gt;body{padding:0}&lt;/style&gt;
 &lt;/body&gt;
 &lt;/html&gt;
 "></iframe>
+</details>
+<script>
+  (() => {
+    const root = document.getElementById('adventure');
+    const get = (name) => root.querySelector('#adventure-' + name);
+    const level = get('level');
+    const scene = get('scene');
+    const mascot = get('mascot');
+    const actions = get('actions');
+    const hint = get('hint');
+    const hintRows = get('hint-rows');
+    const next = get('next');
+    const feedback = get('feedback');
+    const bridge = get('bridge');
+    const stars = get('stars');
+    const confetti = get('confetti');
+    const map = [...root.querySelectorAll('.game-map li')];
+    const zones = [
+      { id: 'forest', name: '點心森林', mascot: '🐰', scenery: ['🌳', '☀️', '🌻'], tile: '🥕' },
+      { id: 'river', name: '木板河谷', mascot: '🦊', scenery: ['🌿', '☁️', '🪨'], tile: '🟫' },
+      { id: 'sky', name: '星燈山頂', mascot: '🦉', scenery: ['🏔️', '🌙', '☁️'], tile: '⭐' }
+    ];
+    const factors = {
+      easy: [2, 3, 4, 5],
+      hard: [6, 7, 8, 9],
+      mixed: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    };
+    const missionsPerZone = 2;
+    let missions = [];
+    let index = 0;
+    let placed = 0;
+    let solved = false;
+    let finished = false;
+
+    function shuffle(items) {
+      for (let index = items.length - 1; index > 0; index--) {
+        const other = Math.floor(Math.random() * (index + 1));
+        [items[index], items[other]] = [items[other], items[index]];
+      }
+      return items;
+    }
+
+    function make(tag, content) {
+      const node = document.createElement(tag);
+      node.textContent = content;
+      return node;
+    }
+
+    function addAction(label, handler, className = '') {
+      const button = make('button', label);
+      button.type = 'button';
+      button.className = className;
+      button.addEventListener('click', handler);
+      actions.append(button);
+      return button;
+    }
+
+    function drawGroups(target, groupCount, groupSize, symbol, rowTag, pieceTag) {
+      target.replaceChildren(...Array.from({ length: groupCount }, () => {
+        const row = document.createElement(rowTag);
+        for (let col = 0; col < groupSize; col++) row.append(make(pieceTag, symbol));
+        return row;
+      }));
+    }
+
+    function setHint(open) {
+      hint.setAttribute('aria-expanded', String(open));
+      hint.textContent = open ? '收起提示' : '看圖提示';
+      hintRows.hidden = !open;
+    }
+
+    function drawBridge(animated = false) {
+      const existing = bridge.children.length;
+      while (bridge.children.length > placed) bridge.lastElementChild.remove();
+      for (let step = existing; step < placed; step++) {
+        const piece = document.createElement('span');
+        piece.dataset.new = String(animated);
+        bridge.append(piece);
+      }
+    }
+
+    function updateMap() {
+      const current = Math.floor(index / missionsPerZone);
+      map.forEach((stop, stopIndex) => {
+        stop.dataset.cleared = String(finished || stopIndex < current || (solved && index % missionsPerZone === missionsPerZone - 1 && stopIndex === current));
+        if (stopIndex === current && !finished) stop.setAttribute('aria-current', 'step');
+        else stop.removeAttribute('aria-current');
+      });
+    }
+
+    function celebrate(zone, size, groups, message) {
+      if (solved) return;
+      solved = true;
+      scene.dataset.win = 'true';
+      confetti.hidden = false;
+      feedback.textContent = message + ' ' + size + ' × ' + groups + '＝' + (size * groups) + '。';
+      if (zone.id === 'sky') drawGroups(stars, groups, size, '✦', 'span', 'b');
+      if (zone.id === 'forest') get('food').hidden = false;
+      for (const button of actions.querySelectorAll('button')) button.disabled = true;
+      next.textContent = index === missions.length - 1 ? '開啟寶箱' : '繼續冒險';
+      next.hidden = false;
+      updateMap();
+      next.focus({ preventScroll: true });
+    }
+
+    function forestMission(zone, size, groups) {
+      const total = size * groups;
+      get('question').textContent = groups + ' 隻兔兔，每隻吃 ' + size + ' 根紅蘿蔔。要推哪輛點心車？';
+      const other = groups === 1 ? total + 2 * size : total - size;
+      shuffle([other, total, total + size]).forEach((amount) => {
+        addAction('🥕 ' + amount, () => {
+          if (amount === total) celebrate(zone, size, groups, '兔兔吃到點心，開心跳起來！');
+          else feedback.textContent = amount < total ? '這車的紅蘿蔔不夠，再挑一輛。' : '這車的紅蘿蔔太多了，再挑一輛。';
+        }, 'number-choice');
+      });
+    }
+
+    function riverMission(zone, size, groups) {
+      const total = size * groups;
+      get('question').textContent = '過河要 ' + total + ' 塊木板。每段橋有 ' + size + ' 塊，幫狐狸把橋接好！';
+      let add;
+      let remove;
+      function updateBridgeControls(animated) {
+        drawBridge(animated);
+        add.disabled = placed === 9;
+        remove.disabled = placed === 0;
+        feedback.textContent = '已接 ' + placed + ' 段，共 ' + (placed * size) + ' 塊木板。';
+      }
+      add = addAction('＋ 接一段', () => {
+        placed++;
+        updateBridgeControls(true);
+        if (add.disabled) remove.focus();
+      });
+      remove = addAction('− 拆一段', () => {
+        placed--;
+        updateBridgeControls(false);
+        if (remove.disabled) add.focus();
+      });
+      addAction('讓狐狸過河', () => {
+        if (placed === groups) celebrate(zone, size, groups, '橋接好了，狐狸順利過河！');
+        else feedback.textContent = placed < groups
+          ? '現在有 ' + (placed * size) + ' 塊，橋還太短。再接一段！'
+          : '現在有 ' + (placed * size) + ' 塊，橋太長了。拆一段試試！';
+      }, 'action');
+      updateBridgeControls(false);
+    }
+
+    function skyMission(zone, size, groups) {
+      get('question').textContent = '貓頭鷹要點亮 ' + size + ' × ' + groups + ' 顆星星。幫牠選出正確的星燈排法！';
+      shuffle([[size, groups], [size, groups + 1], [size + 1, groups]]).forEach(([rowSize, rowCount]) => {
+        addAction(rowCount + ' 排，每排 ' + rowSize + ' 顆', () => {
+          if (rowSize === size && rowCount === groups) celebrate(zone, size, groups, '星燈全亮了，貓頭鷹飛起來了！');
+          else feedback.textContent = rowSize !== size ? '第一個數字是每排的星星數，再看看。' : '第二個數字是要排幾排，再看看。';
+        });
+      });
+    }
+
+    const play = [forestMission, riverMission, skyMission];
+
+    function showMission(focus = false) {
+      const zoneIndex = Math.floor(index / missionsPerZone);
+      const zone = zones[zoneIndex];
+      const [size, groups] = missions[index];
+      placed = 0;
+      solved = false;
+      scene.dataset.zone = zone.id;
+      scene.dataset.win = 'false';
+      scene.dataset.treasure = 'false';
+      mascot.textContent = zone.mascot;
+      get('scenery').replaceChildren(...zone.scenery.map((symbol) => make('span', symbol)));
+      bridge.replaceChildren();
+      bridge.hidden = zone.id !== 'river';
+      stars.replaceChildren();
+      stars.hidden = zone.id !== 'sky';
+      confetti.hidden = true;
+      get('food').hidden = true;
+      get('treasure').hidden = true;
+      feedback.textContent = '';
+      actions.dataset.zone = zone.id;
+      actions.replaceChildren();
+      next.hidden = true;
+      hint.hidden = false;
+      setHint(false);
+      drawGroups(hintRows, groups, size, zone.tile, 'div', 'span');
+      hintRows.setAttribute('aria-label', '共 ' + groups + ' 排，每排 ' + size + ' 個');
+      get('status').textContent = zone.name + '　任務 ' + (index + 1) + '／' + missions.length;
+      play[zoneIndex](zone, size, groups);
+      updateMap();
+      if (focus) actions.firstElementChild.focus({ preventScroll: true });
+    }
+
+    function start(focus = false) {
+      const groupCounts = level.value === 'easy' ? [2, 3, 4, 5] : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+      const allMissions = factors[level.value].flatMap((size) => groupCounts.map((groups) => [size, groups]));
+      missions = shuffle(allMissions).slice(0, missionsPerZone * zones.length);
+      index = 0;
+      finished = false;
+      showMission(focus);
+    }
+
+    function showTreasure() {
+      finished = true;
+      scene.dataset.treasure = 'true';
+      get('treasure').hidden = false;
+      mascot.textContent = '🏆';
+      get('status').textContent = '冒險完成　6／6';
+      get('question').textContent = '寶箱打開了！你拿到了乘法獎盃！';
+      actions.replaceChildren();
+      feedback.textContent = '🌳 點心森林　🌉 木板河谷　🌙 星燈山頂';
+      hint.hidden = true;
+      setHint(false);
+      confetti.hidden = true;
+      requestAnimationFrame(() => {
+        if (finished) confetti.hidden = false;
+      });
+      next.textContent = '再玩一次';
+      updateMap();
+    }
+
+    hint.addEventListener('click', () => setHint(hintRows.hidden));
+    next.addEventListener('click', () => {
+      if (finished) start(true);
+      else if (index === missions.length - 1) showTreasure();
+      else {
+        index++;
+        showMission(true);
+      }
+    });
+    level.addEventListener('change', () => start());
+    start();
+  })();
+</script>
 
 <script>(() => {
   const frame = document.getElementById("codex-visualization");
