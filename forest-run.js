@@ -3,6 +3,9 @@
   const game = get('game');
   const landscape = get('landscape');
   const runner = get('runner');
+  const sprites = [...runner.querySelectorAll('[data-costume]')];
+  const heroNotice = get('hero-notice');
+  const heroGoal = get('hero-goal');
   const obstacle = get('obstacle');
   const firefly = get('firefly');
   const answers = get('answers');
@@ -21,6 +24,12 @@
     { kind: 'lantern', title: '螢火燈塔', icon: '✦', cleared: '燈塔亮起來了！', duration: 9600 }
   ];
   const totalDuration = route.reduce((total, stop) => total + stop.duration, 0);
+  const fireflyStops = [.29, .68];
+  const heroEvery = 10;
+  const heroes = [
+    { costume: 'spark', name: '赤焰超人' },
+    { costume: 'moon', name: '月光騎士' }
+  ];
   const jumpDuration = 720;
   const fireflyWindow = 460;
   let stage = 0;
@@ -33,6 +42,8 @@
   let fireflyIndex = 0;
   let fireflyTimes = [];
   let trailTime = 0;
+  let activeHero = null;
+  let heroTimer;
   let sound = null;
   let muted = true;
 
@@ -56,10 +67,45 @@
     get('route-message').textContent = message;
   }
 
-  function addGem() {
-    gems++;
+  function updateGemMeter() {
     get('gems').textContent = '✦ ' + gems;
     get('gems').setAttribute('aria-label', '已收集 ' + gems + ' 顆螢火');
+    const goal = (Math.floor(gems / heroEvery) + 1) * heroEvery;
+    heroGoal.hidden = goal > route.length * (1 + fireflyStops.length);
+    heroGoal.textContent = '／' + goal;
+    heroGoal.setAttribute('aria-label', '下次變身目標 ' + goal + ' 顆');
+  }
+
+  function showCostume(costume) {
+    runner.dataset.costume = costume;
+    sprites.forEach((sprite) => { sprite.hidden = sprite.dataset.costume !== costume; });
+  }
+
+  function stopHeroEffect() {
+    clearTimeout(heroTimer);
+    heroNotice.hidden = true;
+    delete runner.dataset.transforming;
+  }
+
+  function resetHero() {
+    stopHeroEffect();
+    activeHero = null;
+    showCostume('scout');
+  }
+
+  function addGem() {
+    gems++;
+    updateGemMeter();
+    if (gems % heroEvery !== 0) return false;
+    activeHero = heroes[(gems / heroEvery - 1) % heroes.length];
+    stopHeroEffect();
+    showCostume(activeHero.costume);
+    runner.dataset.transforming = 'true';
+    heroNotice.textContent = '✦ ' + gems + ' 顆！變身成' + activeHero.name + '！';
+    heroNotice.hidden = false;
+    heroTimer = setTimeout(stopHeroEffect, 2000);
+    playNotes([523, 659, 784, 1047, 1319]);
+    return true;
   }
 
   function playNotes(notes) {
@@ -105,8 +151,8 @@
     bonusGems = 0;
     stage = 0;
     trailTime = 0;
-    get('gems').textContent = '✦ 0';
-    get('gems').setAttribute('aria-label', '已收集 0 顆螢火');
+    resetHero();
+    updateGemMeter();
     run();
   }
 
@@ -116,7 +162,7 @@
     jumpTime = 0;
     lastFrame = 0;
     fireflyIndex = 0;
-    fireflyTimes = [stop.duration * .29, stop.duration * .68];
+    fireflyTimes = fireflyStops.map((fraction) => stop.duration * fraction);
     game.dataset.stop = stop.kind;
     obstacle.dataset.kind = stop.kind;
     obstacle.style.left = '115%';
@@ -173,9 +219,9 @@
     const caught = close && untilArrival >= -fireflyWindow && jumpTime > 100;
     if (caught) {
       bonusGems++;
-      addGem();
+      const transformed = addGem();
       say('抓到一顆額外的螢火！');
-      playNotes([659, 880]);
+      if (!transformed) playNotes([659, 880]);
     }
     const passed = caught || untilArrival < -fireflyWindow;
     if (passed) fireflyIndex++;
@@ -229,16 +275,19 @@
   }
 
   function clearGate(size, count) {
-    addGem();
+    const transformed = addGem();
     setState('clearing');
     say(size + ' × ' + count + '＝' + (size * count) + '。' + route[stage].cleared);
-    playNotes([523, 659, 784]);
+    if (!transformed) playNotes([523, 659, 784]);
     setTimeout(() => {
       trailTime += route[stage].duration;
       stage++;
       if (stage < route.length) run();
       else {
         get('result').textContent = '闖過 ' + route.length + ' 道關卡，收集 ' + gems + ' 顆螢火（跳躍加碼 ' + bonusGems + ' 顆）。';
+        const heroResult = get('hero-result');
+        heroResult.hidden = !activeHero;
+        heroResult.textContent = activeHero ? '以「' + activeHero.name + '」的模樣抵達終點。' : '';
         setState('finish');
         get('replay').focus({ preventScroll: true });
         playNotes([523, 659, 784, 1047]);
@@ -249,6 +298,7 @@
   get('start').addEventListener('click', start);
   get('replay').addEventListener('click', start);
   get('menu').addEventListener('click', () => {
+    resetHero();
     setState('welcome');
     get('tables').focus();
   });

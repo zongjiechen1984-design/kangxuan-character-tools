@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>乘法森林跑酷</title>
-  <link rel="stylesheet" href="forest-run.css?v=2">
-  <script defer src="forest-run.js?v=2"></script>
+  <link rel="stylesheet" href="forest-run.css?v=3">
+  <script defer src="forest-run.js?v=3"></script>
 </head>
 <body>
   <main class="shell">
@@ -18,17 +18,26 @@
         <div class="sunlight"></div>
         <div class="obstacle" id="obstacle"><span id="gate-art"></span></div>
         <div class="firefly" id="firefly">✦</div>
-        <div class="runner" id="runner"><img src="forest-run-panda.webp" alt=""></div>
+        <div class="runner" id="runner">
+          <img src="forest-run-panda.webp" alt="" data-costume="scout">
+          <img src="forest-run-spark-hero.webp" alt="" data-costume="spark" hidden>
+          <img src="forest-run-moon-hero.webp" alt="" data-costume="moon" hidden>
+        </div>
         <div class="sparkles" id="sparkles"><span>✦</span><span>★</span><span>✧</span><span>✦</span><span>★</span></div>
       </div>
       <div class="hud" id="hud" hidden>
         <span id="distance"></span>
-        <span id="gems" aria-label="已收集的螢火">✦ 0</span>
+        <span class="gem-meter">
+          <span id="gems" aria-label="已收集的螢火">✦ 0</span>
+          <span id="hero-goal" class="hero-goal" aria-label="變身目標 10 顆">／10</span>
+        </span>
       </div>
+      <div id="hero-notice" class="hero-notice" role="status" hidden></div>
       <div class="overlay" id="welcome">
         <div class="welcome">
           <p>小熊貓找螢火</p>
           <h1>乘法森林跑酷</h1>
+          <p>每集滿 10 顆螢火，小熊貓就會變身！</p>
           <label for="tables">乘法</label>
           <select id="tables">
             <option value="2,3,4,5">暖身 2～5</option>
@@ -53,6 +62,7 @@
           <p class="medal" aria-hidden="true">✦</p>
           <h2 id="finish-title">找到螢火寶箱了！</h2>
           <p id="result"></p>
+          <p id="hero-result" hidden></p>
           <button type="button" class="primary" id="replay">再跑一次</button>
           <button type="button" class="quiet" id="menu">換乘法</button>
         </section>

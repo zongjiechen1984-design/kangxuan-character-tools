@@ -57,6 +57,15 @@ button:disabled { cursor: default; }
   border-radius: 50%; background: #25302f62; transform: translateY(calc(-1 * var(--jump-offset, 0px)));
 }
 .runner img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; position: relative; }
+.runner[data-costume="spark"] { --hero-glow: #ffcb59; }
+.runner[data-costume="moon"] { --hero-glow: #b8a2ff; }
+.runner[data-costume="spark"] img, .runner[data-costume="moon"] img {
+  filter: drop-shadow(0 0 7px var(--hero-glow));
+}
+.runner[data-transforming]::after {
+  content: ""; position: absolute; pointer-events: none; inset: 0; border-radius: 50%;
+  border: 4px solid var(--hero-glow); box-shadow: 0 0 24px var(--hero-glow), inset 0 0 22px var(--hero-glow);
+}
 .obstacle {
   position: absolute; z-index: 2; bottom: 18%; left: 105%; transform: translateX(-50%);
   width: clamp(64px, 16vw, 139px); height: clamp(95px, 20vw, 182px);
@@ -112,8 +121,17 @@ button:disabled { cursor: default; }
   position: absolute; z-index: 5; top: .65rem; left: .65rem; right: .65rem; pointer-events: none;
   font-weight: 900;
 }
-.hud span { background: #153730ed; border: 1px solid #b7cb8a; border-radius: 100px; padding: .35rem .75rem; }
+.hud > span { background: #153730ed; border: 1px solid #b7cb8a; border-radius: 100px; padding: .35rem .75rem; }
 #gems { color: #ffdf73; }
+.hero-goal { color: #d6e3c4; }
+.hero-notice {
+  position: absolute; z-index: 7; top: 3.6rem; left: 50%; transform: translateX(-50%);
+  width: max-content; max-width: calc(100% - 1rem); pointer-events: none;
+  border: 1px solid #ffefb4; border-radius: 100px; background: #3c3067;
+  box-shadow: 0 0 18px #e8bd69a8; color: #fff5c5;
+  padding: .55rem .9rem; text-align: center; font-weight: 900;
+}
+#hero-result { color: #ffdf80; font-weight: 800; }
 .overlay { position: relative; z-index: 6; min-height: inherit; display: grid; place-items: center; padding: 3.35rem .65rem .85rem; background: #102c2d4a; }
 #welcome { padding-bottom: 6.6rem; }
 #question { background: #102c2d91; }
@@ -151,10 +169,18 @@ button:disabled { cursor: default; }
 @media (prefers-reduced-motion: no-preference) {
   .game[data-state="clearing"] .obstacle { transition: transform 520ms, opacity 520ms, box-shadow 520ms; }
   .game[data-state="running"] .runner img { animation: run-bob 240ms ease-in-out alternate infinite; }
+  .runner[data-transforming]::after { animation: hero-ring 1.25s ease-out both; }
+  .hero-notice { animation: hero-announcement 250ms ease-out both; }
   .game[data-state="clearing"] .sparkles span { animation: flash-up 700ms ease-out both; }
   .game[data-state="clearing"] .sparkles span:nth-child(even) { animation-delay: 100ms; }
   .question-card, #finish .welcome { animation: arrive 220ms ease-out both; }
   @keyframes run-bob { to { transform: translateY(-5%) rotate(-3deg); } }
+  @keyframes hero-ring {
+    0% { opacity: .9; transform: scale(.52); }
+    45% { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.45); }
+  }
+  @keyframes hero-announcement { from { opacity: .2; transform: translate(-50%, -7px) scale(.88); } }
   @keyframes flash-up { from { transform: translateY(45px) scale(.2); opacity: .2; } to { transform: translateY(-30px) rotate(30deg); } }
   @keyframes arrive { from { transform: translateY(12px) scale(.97); opacity: .2; } }
 }
